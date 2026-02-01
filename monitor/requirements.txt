@@ -1,0 +1,10 @@
+flask
+requests
+beautifulsoup4
+plyer
+python-telegram-bot
+websockets
+twilio
+pywhatkit
+urllib3
+lxml

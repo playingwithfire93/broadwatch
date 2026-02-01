@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>BroadWatch — UI</title>
+    <link rel="stylesheet" href="/static/ui/styles.css">
+  </head>
+  <body>
+    <header class="ui-header">BroadWatch — Novedades</header>
+    <main class="ui-container">
+      <section id="events"></section>
+    </main>
+
+    <script>
+      async function loadEvents(){
+        const res = await fetch('/api/events')
+        const data = await res.json()
+        const container = document.getElementById('events')
+        container.innerHTML = data.map(e => (`
+          <a class="card" href="/ui/event/${e.id}">
+            <h3>${e.title}</h3>
+            <p class="meta">${e.place} — ${e.date}</p>
+            <p class="summary">${e.summary}</p>
+          </a>
+        `)).join('')
+      }
+      loadEvents()
+    </script>
+  </body>
+</html>
