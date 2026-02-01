@@ -22,7 +22,7 @@ from telegram import Bot
 import asyncio
 import sys
 from urllib3.util.retry import Retry
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, redirect, render_template
 import os
 from twilio.rest import Client
 import json
@@ -429,31 +429,8 @@ SAMPLE_EVENTS = [
 
 @app.route('/')
 def home():
-    banner = get_banner()
-    html = f"""
-    <html>
-        <head>
-            <title>Monitoring Banner</title>
-            <style>
-                body {{
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    height: 100vh;
-                    margin: 0;
-                    font-family: monospace;
-                    white-space: pre;
-                    background-color: #1e1e1e;
-                    color: #d4d4d4;
-                }}
-            </style>
-        </head>
-        <body>
-{banner}
-        </body>
-    </html>
-    """
-    return html
+    # Redirect root to the lightweight HTML UI
+    return redirect('/ui')
 
 
 @app.route('/status', methods=['GET'])
@@ -527,12 +504,12 @@ def api_event_get(event_id):
 # --- Lightweight Flask UI (no Node required) ---
 @app.route('/ui')
 def ui_index():
-    return app.send_static_file('') or __import__('flask').render_template('ui/index.html')
+    return render_template('ui/index.html')
 
 
 @app.route('/ui/event/<event_id>')
 def ui_event(event_id):
-    return __import__('flask').render_template('ui/event.html')
+    return render_template('ui/event.html')
 
 
 # Start monitor immediately when this module is loaded so the web UI and
