@@ -1,10 +1,23 @@
+
 import time
 import requests
 from bs4 import BeautifulSoup
 import hashlib
 from plyer import notification
 import webbrowser
-import winsound
+try:
+    import winsound
+except Exception:
+    # winsound is Windows-only; provide a safe no-op fallback for POSIX environments
+    class _WinsoundFallback:
+        SND_FILENAME = 0
+        SND_ASYNC = 0
+
+        @staticmethod
+        def PlaySound(*args, **kwargs):
+            return False
+
+    winsound = _WinsoundFallback()
 from telegram import Bot
 import asyncio
 import sys
