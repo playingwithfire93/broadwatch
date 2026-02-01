@@ -47,8 +47,10 @@ MAX_CONSECUTIVE_FAILURES = 5  # Attempts before disabling temporarily
 RETRY_BACKOFF = {url: 30 for url in URLS}  # Initial retry delay (in seconds)
 
 # Telegram credentials (recommended: move to env vars)
-TELEGRAM_TOKEN = os.environ.get('BROADWATCH_TELEGRAM_TOKEN', '')
-CHAT_ID = os.environ.get('BROADWATCH_TELEGRAM_CHAT_ID', '')
+# Prefer standard names if available (TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID),
+# fall back to BROADWATCH_* names for backwards compatibility.
+TELEGRAM_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN') or os.environ.get('BROADWATCH_TELEGRAM_TOKEN', '')
+CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID') or os.environ.get('BROADWATCH_TELEGRAM_CHAT_ID', '')
 DISCORD_WEBHOOK = os.environ.get('BROADWATCH_DISCORD_WEBHOOK', '')
 
 # Twilio (recommended: move to env vars)
@@ -128,37 +130,33 @@ def send_telegram_alert(url, changes, timestamp, image_path):
         print("⚠️ Telegram credentials not configured; skipping Telegram alert.")
         return
 
-    async def main():
-        bot = Bot(token=TELEGRAM_TOKEN)
-
-        payload = {
-            "type": "ticket_alert",
-            "url": url,
-            "timestamp": timestamp,
-            "changes_truncated": changes[:3900],
-            "changes_full_length": len(changes),
-        }
-
-        try:
-            if image_path and os.path.exists(image_path):
-                with open(image_path, "rb") as photo:
-                    await bot.send_photo(chat_id=CHAT_ID, photo=photo)
-        except Exception:
-            pass
-
-        try:
-            msg = "```json\n" + json.dumps(payload, ensure_ascii=False, indent=2) + "\n```"
-            await bot.send_message(chat_id=CHAT_ID, text=msg, parse_mode="Markdown")
-        except Exception:
-            try:
-                compact = json.dumps(payload, ensure_ascii=False)
-                await bot.send_message(chat_id=CHAT_ID, text=compact)
-            except Exception as ex:
-                print(f"❌ Telegram send failed: {ex}")
-
     try:
-        asyncio.run(main())
-        print(f"📲 Telegram JSON alert sent for {url}")
+        # Try to send photo (preferred) via sendPhoto
+        if image_path and os.path.exists(image_path):
+            try:
+                with open(image_path, 'rb') as photo:
+                    files = {'photo': photo}
+                    data = {
+                        'chat_id': CHAT_ID,
+                        'caption': f"🎭 Ticket Update Detected:\n{url}\n{timestamp}"
+                    }
+                    resp = requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto", data=data, files=files, timeout=10)
+                    if resp.ok:
+                        print(f"✅ Telegram photo alert sent for {url}")
+                        return
+                    else:
+                        print(f"⚠️ Telegram sendPhoto returned {resp.status_code}: {resp.text}")
+            except Exception as e:
+                print(f"⚠️ Telegram photo send failed: {e}")
+
+        # Fallback to sendMessage with truncated changes
+        msg = f"🎭 Ticket Update Detected\n{url}\n{timestamp}\n\nChanges:\n{changes[:1900]}"
+        payload = {"chat_id": CHAT_ID, "text": msg}
+        r = requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage", json=payload, timeout=10)
+        if r.ok:
+            print(f"📲 Telegram message sent for {url}")
+        else:
+            print(f"❌ Telegram send failed: {r.status_code} {r.text}")
     except Exception as e:
         print(f"❌ Failed to send Telegram alert: {e}")
 
