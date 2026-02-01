@@ -49,6 +49,7 @@ RETRY_BACKOFF = {url: 30 for url in URLS}  # Initial retry delay (in seconds)
 # Telegram credentials (recommended: move to env vars)
 TELEGRAM_TOKEN = os.environ.get('BROADWATCH_TELEGRAM_TOKEN', '')
 CHAT_ID = os.environ.get('BROADWATCH_TELEGRAM_CHAT_ID', '')
+DISCORD_WEBHOOK = os.environ.get('BROADWATCH_DISCORD_WEBHOOK', '')
 
 # Twilio (recommended: move to env vars)
 account_sid = os.environ.get('BROADWATCH_TWILIO_SID', '')
@@ -191,6 +192,23 @@ def send_whatsapp_alert(phone_number, url, changes):
     except Exception as e:
         print(f"❌ Error sending WhatsApp alert: {e}")
 
+
+def send_discord_alert(url, changes, image_path=None):
+    if not DISCORD_WEBHOOK:
+        print("⚠️ Discord webhook not configured; skipping Discord alert.")
+        return
+    try:
+        content = f"🎭 **Ticket Update Detected**\n{url}\n\nChanges:\n{changes[:1900]}"
+        payload = {"content": content}
+        # Post to Discord webhook
+        resp = requests.post(DISCORD_WEBHOOK, json=payload, timeout=10)
+        if resp.status_code in (200, 204):
+            print("✅ Discord alert sent")
+        else:
+            print(f"❌ Discord webhook returned {resp.status_code}: {resp.text}")
+    except Exception as e:
+        print(f"❌ Failed to send Discord alert: {e}")
+
 import websockets
 
 async def notify_godot(url):
@@ -237,6 +255,7 @@ def notify_change(url, old_text, new_text):
     send_telegram_alert(url, changes, time.strftime("%Y-%m-%d %H:%M:%S"), image_path)
     for number in whatsapp_numbers:
         send_whatsapp_alert(number, url, changes)
+    send_discord_alert(url, changes, image_path)
 
 
 def get_page_content(url):
@@ -411,6 +430,7 @@ app = Flask(__name__)
 SAMPLE_EVENTS = [
     {
         'id': 'wicked',
+        'monitor_key': 'wicked',
         'title': 'Wicked — El Musical',
         'place': 'Teatro Real, Madrid',
         'date': '2026-02-12 20:30',
@@ -419,6 +439,7 @@ SAMPLE_EVENTS = [
     },
     {
         'id': 'lesmis',
+        'monitor_key': 'les_mis',
         'title': 'Los Miserables',
         'place': 'Teatro Nuevo, Barcelona',
         'date': '2026-02-14 19:00',
@@ -501,6 +522,38 @@ def api_event_get(event_id):
         if e['id'] == event_id:
             return jsonify(e)
     return jsonify({'error': 'not found'}), 404
+
+
+@app.route('/api/notify', methods=['POST'])
+def api_notify():
+    data = request.get_json() or {}
+    event_id = data.get('event_id')
+    url = data.get('url')
+    # Determine URL from event mapping if event_id provided
+    if not url and event_id:
+        for e in SAMPLE_EVENTS:
+            if e.get('id') == event_id:
+                monitor_key = e.get('monitor_key')
+                if monitor_key and monitor_key in alerts_data:
+                    url = alerts_data[monitor_key]['urls'][0]
+                break
+
+    if not url:
+        # fallback to the first monitored URL
+        url = URLS[0] if URLS else ''
+
+    old = data.get('old', 'previous content')
+    new = data.get('new', 'simulated change for test')
+
+    # Run notification in background so HTTP request returns immediately
+    def _bg():
+        try:
+            notify_change(url, old, new)
+        except Exception as ex:
+            print(f"Error running notify_change in bg: {ex}")
+
+    threading.Thread(target=_bg, daemon=True).start()
+    return jsonify({'ok': True, 'url': url})
 
 
 # --- Lightweight Flask UI (no Node required) ---

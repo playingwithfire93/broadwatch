@@ -28,6 +28,7 @@
               <p class="small-note">${e.summary}</p>
               <div style="margin-top:18px" class="card-actions">
                 <button class="btn btn-primary">Recordarme</button>
+                <button class="btn btn-test" onclick="testNotify('${e.id}')">Test Notif</button>
                 <a href="/" class="btn btn-ghost">Volver</a>
               </div>
             </div>
@@ -35,6 +36,16 @@
         `
       }
       loadEvent()
+
+      async function testNotify(eventId){
+        try{
+          const res = await fetch('/api/notify', {method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({event_id: eventId})})
+          const j = await res.json()
+          alert('Test notification triggered for ' + j.url)
+        }catch(err){
+          alert('Failed to trigger test: ' + err)
+        }
+      }
     </script>
   </body>
 </html>
