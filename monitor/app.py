@@ -433,7 +433,7 @@ SAMPLE_EVENTS = [
         'place': 'Teatro Real, Madrid',
         'date': '2026-02-12 20:30',
         'summary': 'Un viaje musical por las historias que marcaron una generación.'
-        ,'image': 'https://via.placeholder.com/600x400?text=Wicked'
+        ,'image': '/static/ui/images/wicked.jpg'
     },
     {
         'id': 'lesmis',
@@ -442,7 +442,7 @@ SAMPLE_EVENTS = [
         'place': 'Teatro Nuevo, Barcelona',
         'date': '2026-02-14 19:00',
         'summary': 'Clásico musical en una nueva producción.'
-        ,'image': 'https://via.placeholder.com/600x400?text=Les+Mis'
+        ,'image': '/static/ui/images/les-miserables.jpg'
     }
 ]
 
