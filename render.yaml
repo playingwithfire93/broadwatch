@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: broadwatch-web
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn monitor.app:app --bind 0.0.0.0:$PORT --workers 1
