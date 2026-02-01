@@ -7,10 +7,21 @@
     <link rel="stylesheet" href="/static/ui/styles.css">
   </head>
   <body>
-    <header class="ui-header">BroadWatch — Novedades</header>
+    <header class="ui-header">
+      <div class="header-left">
+        <div class="logo">BroadWatch</div>
+        <div class="tag">Musical Alerts</div>
+      </div>
+      <div class="header-right">
+        <input id="search" class="search" placeholder="Buscar musical, ciudad o fecha..." />
+        <div id="status" class="status-pill">Estado: <span id="status-val">—</span></div>
+      </div>
+    </header>
     <main class="ui-container">
       <section id="events" class="grid"></section>
     </main>
+
+    <div id="toast" class="toast" aria-live="polite"></div>
 
     <script>
       async function loadEvents(){
@@ -18,21 +29,29 @@
           const data = await res.json()
           const container = document.getElementById('events')
           container.innerHTML = data.map(e => {
-            const thumb = e.image || `https://via.placeholder.com/320x180?text=${encodeURIComponent(e.title)}`
+            const thumb = e.image || `https://via.placeholder.com/640x360?text=${encodeURIComponent(e.title)}`
+            const availability = e.available ? 'Disponible' : 'Agotado'
+            const badgeClass = e.available ? 'badge available' : 'badge sold'
+            const datePill = `<span class="date-pill">${e.date.split(' ')[0] || ''}</span>`
             return (`
-              <a class="card" href="/ui/event/${e.id}">
+              <article class="card">
                 <div class="thumb" style="background-image:url('${thumb}')"></div>
                 <div class="card-body">
-                  <h3>${e.title}</h3>
+                  <div class="card-head">
+                    <h3>${e.title}</h3>
+                    ${datePill}
+                  </div>
                   <p class="meta">${e.place} — ${e.date}</p>
                   <p class="summary">${e.summary}</p>
                   <div class="card-actions">
                     <button class="btn btn-primary">Recordarme</button>
                     <button class="btn btn-ghost" onclick="window.location='/ui/event/${e.id}'">Ver</button>
                     <button class="btn btn-test" onclick="testNotify('${e.id}')">Test Notif</button>
+                    <span class="spacer"></span>
+                    <span class="${badgeClass}">${availability}</span>
                   </div>
                 </div>
-              </a>
+              </article>
             `)
           }).join('')
       }
@@ -42,10 +61,40 @@
         try{
           const res = await fetch('/api/notify', {method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({event_id: eventId})})
           const j = await res.json()
-          alert('Test notification triggered for ' + j.url)
+          showToast('Test notification triggered for ' + j.url)
         }catch(err){
-          alert('Failed to trigger test: ' + err)
+          showToast('Failed to trigger test: ' + err, true)
         }
+      }
+
+      // Live search filter
+      document.getElementById('search').addEventListener('input', (ev) => {
+        const q = ev.target.value.toLowerCase().trim()
+        document.querySelectorAll('#events .card').forEach(card => {
+          const txt = card.innerText.toLowerCase()
+          card.style.display = q ? (txt.includes(q) ? '' : 'none') : ''
+        })
+      })
+
+      // Status poll
+      async function refreshStatus(){
+        try{
+          const r = await fetch('/status')
+          const s = await r.json()
+          document.getElementById('status-val').innerText = s.running ? (s.paused? 'Paused':'Running') : 'Stopped'
+        }catch(e){
+          document.getElementById('status-val').innerText = 'Unavailable'
+        }
+      }
+      setInterval(refreshStatus, 5000)
+      refreshStatus()
+
+      function showToast(msg, isError){
+        const t = document.getElementById('toast')
+        t.className = 'toast' + (isError ? ' toast-error' : '')
+        t.innerText = msg
+        t.style.opacity = 1
+        setTimeout(()=>{ t.style.opacity = 0 }, 3500)
       }
     </script>
   </body>
