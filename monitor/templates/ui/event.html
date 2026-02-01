@@ -9,7 +9,7 @@
   <body>
     <header class="ui-header">BroadWatch — Evento</header>
     <main class="ui-container" id="content">
-      <div>Loading...</div>
+      <div class="event-large">Loading...</div>
     </main>
 
     <script>
@@ -18,11 +18,19 @@
         const res = await fetch('/api/events/' + id)
         if (!res.ok){ document.getElementById('content').innerText = 'Evento no encontrado'; return }
         const e = await res.json()
+        const thumb = `https://via.placeholder.com/1200x600?text=${encodeURIComponent(e.title)}`
         document.getElementById('content').innerHTML = `
-          <article class="card">
-            <h1>${e.title}</h1>
-            <p class="meta">${e.place} — ${e.date}</p>
-            <p>${e.summary}</p>
+          <article class="event-large">
+            <div class="event-hero" style="background-image:url('${thumb}')"></div>
+            <div style="margin-top:14px">
+              <h1 style="margin:6px 0">${e.title}</h1>
+              <p class="meta">${e.place} — ${e.date}</p>
+              <p class="small-note">${e.summary}</p>
+              <div style="margin-top:18px" class="card-actions">
+                <button class="btn btn-primary">Recordarme</button>
+                <a href="/" class="btn btn-ghost">Volver</a>
+              </div>
+            </div>
           </article>
         `
       }

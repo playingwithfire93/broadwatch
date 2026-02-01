@@ -9,21 +9,31 @@
   <body>
     <header class="ui-header">BroadWatch — Novedades</header>
     <main class="ui-container">
-      <section id="events"></section>
+      <section id="events" class="grid"></section>
     </main>
 
     <script>
       async function loadEvents(){
         const res = await fetch('/api/events')
-        const data = await res.json()
-        const container = document.getElementById('events')
-        container.innerHTML = data.map(e => (`
-          <a class="card" href="/ui/event/${e.id}">
-            <h3>${e.title}</h3>
-            <p class="meta">${e.place} — ${e.date}</p>
-            <p class="summary">${e.summary}</p>
-          </a>
-        `)).join('')
+          const data = await res.json()
+          const container = document.getElementById('events')
+          container.innerHTML = data.map(e => {
+            const thumb = `https://via.placeholder.com/320x180?text=${encodeURIComponent(e.title)}`
+            return (`
+              <a class="card" href="/ui/event/${e.id}">
+                <div class="thumb" style="background-image:url('${thumb}')"></div>
+                <div class="card-body">
+                  <h3>${e.title}</h3>
+                  <p class="meta">${e.place} — ${e.date}</p>
+                  <p class="summary">${e.summary}</p>
+                  <div class="card-actions">
+                    <button class="btn btn-primary">Recordarme</button>
+                    <button class="btn btn-ghost">Ver</button>
+                  </div>
+                </div>
+              </a>
+            `)
+          }).join('')
       }
       loadEvents()
     </script>
