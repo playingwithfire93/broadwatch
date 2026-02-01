@@ -525,6 +525,7 @@ def api_event_get(event_id):
 @app.route('/api/notify', methods=['POST'])
 def api_notify():
     data = request.get_json() or {}
+    print(f"[/api/notify] received request: {data}")
     event_id = data.get('event_id')
     url = data.get('url')
     # Determine URL from event mapping if event_id provided

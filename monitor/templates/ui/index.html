@@ -81,12 +81,17 @@
 
       // Trigger a notification via API
       async function testNotify(eventId){
+        showToast('Enviando test…')
+        console.log('[ui] testNotify ->', eventId)
         try{
           const res = await fetch('/api/notify', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({event_id: eventId})})
+          console.log('[ui] /api/notify response', res)
           if(!res.ok) throw new Error('HTTP ' + res.status)
           const j = await res.json()
+          console.log('[ui] /api/notify json', j)
           showToast('Notificación enviada: ' + (j.url || eventId))
         }catch(err){
+          console.error('[ui] testNotify error', err)
           showToast('Error al enviar test: ' + err, true)
         }
       }
