@@ -18,7 +18,7 @@
         const res = await fetch('/api/events/' + id)
         if (!res.ok){ document.getElementById('content').innerText = 'Evento no encontrado'; return }
         const e = await res.json()
-        const thumb = `https://via.placeholder.com/1200x600?text=${encodeURIComponent(e.title)}`
+        const thumb = e.image || `https://via.placeholder.com/1200x600?text=${encodeURIComponent(e.title)}`
         document.getElementById('content').innerHTML = `
           <article class="event-large">
             <div class="event-hero" style="background-image:url('${thumb}')"></div>

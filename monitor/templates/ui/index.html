@@ -18,7 +18,7 @@
           const data = await res.json()
           const container = document.getElementById('events')
           container.innerHTML = data.map(e => {
-            const thumb = `https://via.placeholder.com/320x180?text=${encodeURIComponent(e.title)}`
+            const thumb = e.image || `https://via.placeholder.com/320x180?text=${encodeURIComponent(e.title)}`
             return (`
               <a class="card" href="/ui/event/${e.id}">
                 <div class="thumb" style="background-image:url('${thumb}')"></div>
