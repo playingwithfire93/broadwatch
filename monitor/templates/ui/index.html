@@ -127,17 +127,67 @@
         setTimeout(()=>{ t.style.opacity = 0 }, 4000)
       }
 
-      // Hero video rotation (lazy-start)
+      // Hero video rotation (lazy-start) with robust error handling
       (function rotateHero(){
         const vids = Array.from(document.querySelectorAll('.hero-video'))
         if(!vids.length) return
+
+        // Keep only videos that have a src and a supported type
+        const playable = vids.filter(v => {
+          const src = v.getAttribute('src') || ''
+          if(!src) return false
+          // Basic support check (browser may still fail to play if file missing)
+          const canMp4 = v.canPlayType && v.canPlayType('video/mp4')
+          const canWebm = v.canPlayType && v.canPlayType('video/webm')
+          return !!(canMp4 || canWebm)
+        })
+        if(!playable.length) return
+
         let i = 0
-        vids.forEach((v, idx)=>{ if(idx!==0) v.style.display='none'; v.muted = true })
-        setInterval(()=>{
-          vids[i].style.display='none'
-          i = (i+1) % vids.length
-          vids[i].style.display='block'
-          try{ vids[i].play() }catch(e){}
+        playable.forEach((v, idx)=>{
+          v.style.display = idx === 0 ? 'block' : 'none'
+          v.muted = true
+          v.preload = 'metadata'
+          v.addEventListener('error', (ev) => console.warn('[ui] hero video error', v.src, ev))
+        })
+
+        const playSafe = async (videoEl) => {
+          try{
+            const p = videoEl.play()
+            if(p && typeof p.then === 'function') await p
+            return true
+          }catch(err){
+            console.warn('[ui] video play failed for', videoEl.src, err)
+            return false
+          }
+        }
+
+        // Try to play first available
+        playSafe(playable[0]).catch(()=>{})
+
+        const interval = setInterval(async () => {
+          if(playable.length <= 1){
+            // Nothing to rotate
+            clearInterval(interval)
+            return
+          }
+
+          const current = playable[i]
+          current.style.display = 'none'
+          try{ current.pause(); current.currentTime = 0 }catch(e){}
+
+          i = (i + 1) % playable.length
+          const next = playable[i]
+          next.style.display = 'block'
+
+          const ok = await playSafe(next)
+          if(!ok){
+            // Remove failing video so we don't attempt again
+            console.warn('[ui] removing failing hero video', next.src)
+            playable.splice(i, 1)
+            if(playable.length === 0){ clearInterval(interval); return }
+            i = i % playable.length
+          }
         }, 5000)
       })()
     </script>
