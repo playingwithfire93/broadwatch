@@ -555,6 +555,30 @@ def api_notify():
     return jsonify({'ok': True, 'url': url})
 
 
+@app.route('/api/env', methods=['GET'])
+def api_env():
+    """Return non-sensitive presence flags for important env vars."""
+    return jsonify({
+        'telegram_token_set': bool(TELEGRAM_TOKEN),
+        'telegram_chat_id_set': bool(CHAT_ID),
+        'discord_webhook_set': bool(DISCORD_WEBHOOK),
+        'twilio_configured': bool(account_sid and auth_token)
+    })
+
+
+@app.route('/api/test_telegram', methods=['POST', 'GET'])
+def api_test_telegram():
+    """Send a simple Telegram test message using configured credentials."""
+    if not TELEGRAM_TOKEN or not CHAT_ID:
+        return jsonify({'ok': False, 'error': 'telegram credentials not configured'}), 400
+    try:
+        payload = {'chat_id': CHAT_ID, 'text': '📣 Prueba de BroadWatch: mensaje de comprobación.'}
+        resp = requests.post(f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage', json=payload, timeout=10)
+        return jsonify({'ok': resp.ok, 'status_code': resp.status_code, 'text': resp.text})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
 # --- Lightweight Flask UI (no Node required) ---
 @app.route('/ui')
 def ui_index():
