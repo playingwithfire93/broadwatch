@@ -436,7 +436,7 @@ SAMPLE_EVENTS = [
         ,'image': '/static/ui/images/wicked.jpg'
     },
     {
-        'id': 'lesmis',
+        'id': 'les_mis',
         'monitor_key': 'les_mis',
         'title': 'Los Miserables',
         'place': 'Teatro Nuevo, Barcelona',
