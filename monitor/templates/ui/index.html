@@ -3,46 +3,65 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>BroadWatch — UI</title>
+    <meta name="description" content="Alertas y calendario unificado de musicales en España" />
+    <title>BroadWatch — Musical Alerts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/ui/styles.css">
   </head>
   <body>
     <header class="ui-header">
       <div class="header-left">
-        <div class="logo">BroadWatch</div>
-        <div class="tag">Musical Alerts</div>
+        <a href="/ui" class="logo">BroadWatch</a>
+        <div class="tag">Musical Alerts · España</div>
       </div>
       <div class="header-right">
-        <input id="search" class="search" placeholder="Buscar musical, ciudad o fecha..." />
-        <div id="status" class="status-pill">Estado: <span id="status-val">—</span></div>
+        <input id="search" class="search" placeholder="Buscar musical, ciudad o fecha..." aria-label="Buscar" />
+        <div id="status" class="status-pill">Estado: <strong id="status-val">—</strong></div>
       </div>
     </header>
+
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="hero-text">
+          <h1>Últimas novedades en musicales</h1>
+          <p>Recibe alertas y consulta el calendario unificado de espectáculos.</p>
+        </div>
+        <div class="hero-videos" id="hero-videos">
+          <video class="hero-video" muted playsinline preload="metadata" loop src="/static/ui/videos/video1.mp4"></video>
+          <video class="hero-video" muted playsinline preload="metadata" loop src="/static/ui/videos/video2.mp4"></video>
+          <video class="hero-video" muted playsinline preload="metadata" loop src="/static/ui/videos/video3.mp4"></video>
+        </div>
+      </div>
+    </section>
+
     <main class="ui-container">
-      <section id="events" class="grid"></section>
+      <section id="events" class="grid" aria-live="polite"></section>
     </main>
 
-    <div id="toast" class="toast" aria-live="polite"></div>
+    <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
 
     <script>
+      // Load events and render cards
       async function loadEvents(){
-        const res = await fetch('/api/events')
+        try{
+          const res = await fetch('/api/events')
           const data = await res.json()
           const container = document.getElementById('events')
           container.innerHTML = data.map(e => {
-            const thumb = e.image || `https://via.placeholder.com/640x360?text=${encodeURIComponent(e.title)}`
+            const thumb = e.image || (`/static/ui/images/placeholder.png`)
             const availability = e.available ? 'Disponible' : 'Agotado'
             const badgeClass = e.available ? 'badge available' : 'badge sold'
-            const datePill = `<span class="date-pill">${e.date.split(' ')[0] || ''}</span>`
+            const dateShort = (e.date || '').split(' ')[0]
             return (`
               <article class="card">
-                <div class="thumb" style="background-image:url('${thumb}')"></div>
+                <div class="thumb" style="background-image:url('${thumb}')" role="img" aria-label="${e.title}"></div>
                 <div class="card-body">
                   <div class="card-head">
                     <h3>${e.title}</h3>
-                    ${datePill}
+                    <span class="date-pill">${dateShort}</span>
                   </div>
-                  <p class="meta">${e.place} — ${e.date}</p>
-                  <p class="summary">${e.summary}</p>
+                  <p class="meta">${e.place || ''} — ${e.date || ''}</p>
+                  <p class="summary">${e.summary || ''}</p>
                   <div class="card-actions">
                     <button class="btn btn-primary">Recordarme</button>
                     <button class="btn btn-ghost" onclick="window.location='/ui/event/${e.id}'">Ver</button>
@@ -54,16 +73,21 @@
               </article>
             `)
           }).join('')
+        }catch(err){
+          showToast('Error cargando eventos: ' + err, true)
+        }
       }
       loadEvents()
 
+      // Trigger a notification via API
       async function testNotify(eventId){
         try{
-          const res = await fetch('/api/notify', {method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({event_id: eventId})})
+          const res = await fetch('/api/notify', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({event_id: eventId})})
+          if(!res.ok) throw new Error('HTTP ' + res.status)
           const j = await res.json()
-          showToast('Test notification triggered for ' + j.url)
+          showToast('Notificación enviada: ' + (j.url || eventId))
         }catch(err){
-          showToast('Failed to trigger test: ' + err, true)
+          showToast('Error al enviar test: ' + err, true)
         }
       }
 
@@ -89,13 +113,28 @@
       setInterval(refreshStatus, 5000)
       refreshStatus()
 
+      // Simple toast
       function showToast(msg, isError){
         const t = document.getElementById('toast')
         t.className = 'toast' + (isError ? ' toast-error' : '')
         t.innerText = msg
         t.style.opacity = 1
-        setTimeout(()=>{ t.style.opacity = 0 }, 3500)
+        setTimeout(()=>{ t.style.opacity = 0 }, 4000)
       }
+
+      // Hero video rotation (lazy-start)
+      (function rotateHero(){
+        const vids = Array.from(document.querySelectorAll('.hero-video'))
+        if(!vids.length) return
+        let i = 0
+        vids.forEach((v, idx)=>{ if(idx!==0) v.style.display='none'; v.muted = true })
+        setInterval(()=>{
+          vids[i].style.display='none'
+          i = (i+1) % vids.length
+          vids[i].style.display='block'
+          try{ vids[i].play() }catch(e){}
+        }, 5000)
+      })()
     </script>
   </body>
 </html>
