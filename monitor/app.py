@@ -90,12 +90,7 @@ alerts_data = {
         'sound_path': r"C:\Users\Blanca\Desktop\Orlando-The-Book-of-Mormon.wav",
         'image_path': r"C:\Users\Blanca\Desktop\tticket-monitor\static\fotos\book_of_mormon\BOM5.jpg"
     }
-    ,
-    'httpbin_test': {
-        'urls': ['https://httpbin.org/get'],
-        'sound_path': r'C:\Sonidos\default.wav',
-        'image_path': r'C:\Imagenes\default.webp'
-    }
+    
 }
 
 client = None
