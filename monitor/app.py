@@ -43,8 +43,6 @@ URLS = [
     'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01'
 ]
 
-# Test URL that changes frequently for notification testing
-URLS.append('https://httpbin.org/get')
 
 CHECK_INTERVAL = int(os.environ.get('BROADWATCH_CHECK_INTERVAL', 5))  # Seconds between checks
 MAX_CONSECUTIVE_FAILURES = 5  # Attempts before disabling temporarily
@@ -548,16 +546,7 @@ SAMPLE_EVENTS = [
         'summary': 'Clásico musical en una nueva producción.'
         ,'image': '/static/ui/images/les-miserables.jpg'
     }
-    ,
-    {
-        'id': 'httpbin',
-        'monitor_key': 'httpbin_test',
-        'title': 'HTTPBin Test',
-        'place': 'Prueba local',
-        'date': '2026-02-02',
-        'summary': 'URL de prueba que cambia para testear notificaciones.',
-        'image': '/static/ui/images/test.jpg'
-    }
+    
 ]
 
 
@@ -727,12 +716,7 @@ def api_env():
         'telegram_chat_id_set': bool(CHAT_ID),
         'discord_webhook_set': bool(DISCORD_WEBHOOK),
         'twilio_configured': bool(account_sid and auth_token)
-    })
-
-
-@app.route('/api/test_telegram', methods=['POST', 'GET'])
-def api_test_telegram():
-    """Send a simple Telegram test message using configured credentials."""
+    
     if not TELEGRAM_TOKEN or not CHAT_ID:
         return jsonify({'ok': False, 'error': 'telegram credentials not configured'}), 400
     try:
