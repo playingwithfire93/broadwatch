@@ -716,7 +716,12 @@ def api_env():
         'telegram_chat_id_set': bool(CHAT_ID),
         'discord_webhook_set': bool(DISCORD_WEBHOOK),
         'twilio_configured': bool(account_sid and auth_token)
-    
+    })
+
+
+@app.route('/api/test_telegram', methods=['POST', 'GET'])
+def api_test_telegram():
+    """Send a simple Telegram test message using configured credentials."""
     if not TELEGRAM_TOKEN or not CHAT_ID:
         return jsonify({'ok': False, 'error': 'telegram credentials not configured'}), 400
     try:
