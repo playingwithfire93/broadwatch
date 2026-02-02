@@ -22,12 +22,13 @@ from telegram import Bot
 import asyncio
 import sys
 from urllib3.util.retry import Retry
-from flask import Flask, request, jsonify, redirect, render_template
+from flask import Flask, request, jsonify, redirect, render_template, Response
 import os
 from twilio.rest import Client
 import json
 import threading
 from datetime import datetime
+from pathlib import Path
 
 # List of URLs to monitor
 URLS = [
@@ -217,6 +218,93 @@ import difflib
 
 old_contents = {url: "" for url in URLS}
 
+# Logs directory and manager
+BASE_DIR = os.path.dirname(__file__)
+LOG_DIR = Path(BASE_DIR) / 'logs'
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+MAX_LOG_ENTRIES = int(os.environ.get('BROADWATCH_MAX_LOG_ENTRIES', 10))
+
+
+class LogManager:
+    def __init__(self, log_dir: Path, max_entries: int = 10):
+        self.log_dir = log_dir
+        self.max_entries = max_entries
+
+    def _path_for(self, key: str) -> Path:
+        safe = key.replace('/', '_')
+        return self.log_dir / f"{safe}.json"
+
+    def load(self, key: str):
+        p = self._path_for(key)
+        if not p.exists():
+            return []
+        try:
+            with p.open('r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            return []
+
+    def save(self, key: str, entries):
+        p = self._path_for(key)
+        try:
+            with p.open('w', encoding='utf-8') as f:
+                json.dump(entries, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"❌ Error saving logs for {key}: {e}")
+
+    def add(self, key: str, entry: dict):
+        entries = self.load(key)
+        entries.insert(0, entry)
+        # Trim to max_entries
+        entries = entries[: self.max_entries]
+        self.save(key, entries)
+        # Also update a human-readable text version
+        try:
+            self._write_text_file(key, entries)
+        except Exception as e:
+            print(f"❌ Error writing text log for {key}: {e}")
+
+    def get(self, key: str, n: int = None):
+        n = n or self.max_entries
+        entries = self.load(key)
+        return entries[:n]
+
+    def format_entries_to_text(self, entries):
+        parts = []
+        for e in entries:
+            ts = e.get('timestamp', '')
+            url = e.get('url', '')
+            changes = e.get('changes', '')
+            # Keep only first 1200 chars of changes for readability
+            display = changes if len(changes) <= 1200 else changes[:1200] + '\n... (truncated)'
+            parts.append(f"=== {ts} ===\nURL: {url}\n\nChanges:\n{display}\n\n")
+        return "\n".join(parts)
+
+    def _write_text_file(self, key: str, entries):
+        p = self._path_for(key).with_suffix('.txt')
+        text = self.format_entries_to_text(entries)
+        try:
+            with p.open('w', encoding='utf-8') as f:
+                f.write(text)
+        except Exception as e:
+            print(f"❌ Error saving text log for {key}: {e}")
+
+
+LOG_MANAGER = LogManager(LOG_DIR, max_entries=MAX_LOG_ENTRIES)
+
+
+def get_monitor_key_for_url(url: str):
+    # Try to find a matching monitor key from alerts_data
+    for key, data in alerts_data.items():
+        if url in data.get('urls', []):
+            return key
+    # fallback: try matching by domain prefix
+    for key, data in alerts_data.items():
+        for u in data.get('urls', []):
+            if u and u.split('/')[2] in url:
+                return key
+    return None
+
 def find_differences(old_text, new_text):
     diff = difflib.unified_diff(old_text.splitlines(), new_text.splitlines(), lineterm="")
     return "\n".join(diff)
@@ -239,6 +327,18 @@ def notify_change(url, old_text, new_text):
 
     print(f"🔔 Notification sent for {url}")
     print(f"📝 Changes detected:\n{changes}")
+    # Save change into per-musical logs
+    try:
+        monitor_key = get_monitor_key_for_url(url) or 'general'
+        entry = {
+            'timestamp': datetime.utcnow().isoformat() + 'Z',
+            'url': url,
+            'changes': changes
+        }
+        LOG_MANAGER.add(monitor_key, entry)
+        print(f"💾 Saved log for {monitor_key}")
+    except Exception as e:
+        print(f"❌ Error saving log: {e}")
 
     sound_path, image_path = get_alert_assets(url)
     try:
@@ -520,6 +620,56 @@ def api_event_get(event_id):
         if e['id'] == event_id:
             return jsonify(e)
     return jsonify({'error': 'not found'}), 404
+
+
+@app.route('/api/logs/<monitor_key>', methods=['GET'])
+def api_logs_for_key(monitor_key):
+    try:
+        n = int(request.args.get('n', MAX_LOG_ENTRIES))
+    except Exception:
+        n = MAX_LOG_ENTRIES
+    logs = LOG_MANAGER.get(monitor_key, n)
+    return jsonify({'ok': True, 'monitor_key': monitor_key, 'logs': logs})
+
+
+@app.route('/api/logs', methods=['GET'])
+def api_logs_by_url():
+    url = request.args.get('url')
+    if not url:
+        return jsonify({'ok': False, 'error': 'missing url parameter'}), 400
+    monitor_key = get_monitor_key_for_url(url) or 'general'
+    try:
+        n = int(request.args.get('n', MAX_LOG_ENTRIES))
+    except Exception:
+        n = MAX_LOG_ENTRIES
+    logs = LOG_MANAGER.get(monitor_key, n)
+    return jsonify({'ok': True, 'monitor_key': monitor_key, 'logs': logs})
+
+
+@app.route('/api/logs/<monitor_key>/text', methods=['GET'])
+def api_logs_for_key_text(monitor_key):
+    try:
+        n = int(request.args.get('n', MAX_LOG_ENTRIES))
+    except Exception:
+        n = MAX_LOG_ENTRIES
+    entries = LOG_MANAGER.get(monitor_key, n)
+    text = LOG_MANAGER.format_entries_to_text(entries)
+    return Response(text, mimetype='text/plain; charset=utf-8')
+
+
+@app.route('/api/logs/text', methods=['GET'])
+def api_logs_by_url_text():
+    url = request.args.get('url')
+    if not url:
+        return jsonify({'ok': False, 'error': 'missing url parameter'}), 400
+    monitor_key = get_monitor_key_for_url(url) or 'general'
+    try:
+        n = int(request.args.get('n', MAX_LOG_ENTRIES))
+    except Exception:
+        n = MAX_LOG_ENTRIES
+    entries = LOG_MANAGER.get(monitor_key, n)
+    text = LOG_MANAGER.format_entries_to_text(entries)
+    return Response(text, mimetype='text/plain; charset=utf-8')
 
 
 @app.route('/api/notify', methods=['POST'])
