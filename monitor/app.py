@@ -43,6 +43,9 @@ URLS = [
     'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01'
 ]
 
+# Test URL that changes frequently for notification testing
+URLS.append('https://httpbin.org/get')
+
 CHECK_INTERVAL = int(os.environ.get('BROADWATCH_CHECK_INTERVAL', 5))  # Seconds between checks
 MAX_CONSECUTIVE_FAILURES = 5  # Attempts before disabling temporarily
 RETRY_BACKOFF = {url: 30 for url in URLS}  # Initial retry delay (in seconds)
@@ -86,6 +89,12 @@ alerts_data = {
         ],
         'sound_path': r"C:\Users\Blanca\Desktop\Orlando-The-Book-of-Mormon.wav",
         'image_path': r"C:\Users\Blanca\Desktop\tticket-monitor\static\fotos\book_of_mormon\BOM5.jpg"
+    }
+    ,
+    'httpbin_test': {
+        'urls': ['https://httpbin.org/get'],
+        'sound_path': r'C:\Sonidos\default.wav',
+        'image_path': r'C:\Imagenes\default.webp'
     }
 }
 
@@ -543,6 +552,16 @@ SAMPLE_EVENTS = [
         'date': '2026-02-14 19:00',
         'summary': 'Clásico musical en una nueva producción.'
         ,'image': '/static/ui/images/les-miserables.jpg'
+    }
+    ,
+    {
+        'id': 'httpbin',
+        'monitor_key': 'httpbin_test',
+        'title': 'HTTPBin Test',
+        'place': 'Prueba local',
+        'date': '2026-02-02',
+        'summary': 'URL de prueba que cambia para testear notificaciones.',
+        'image': '/static/ui/images/test.jpg'
     }
 ]
 
