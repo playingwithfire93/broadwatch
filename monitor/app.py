@@ -14,7 +14,16 @@ except Exception:
         SND_ASYNC = 0
 
         @staticmethod
-        def PlaySound(*args, **kwargs):
+    ,
+    {
+        'id': 'tbom',
+        'monitor_key': 'tbom',
+        'title': 'The Book of Mormon',
+        'place': 'Teatro Rialto, Madrid',
+        'date': '2026-02-14 19:00',
+        'summary': 'Comedia musical irreverente y galardonada.',
+        'image': '/static/ui/images/book_of_mormon.jpg'
+    }
             return False
 
     winsound = _WinsoundFallback()
