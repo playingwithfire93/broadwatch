@@ -1,11 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
 
 :root{
-	--bg:#f4f5f8;
+	--bg:#fdf6fb;
 	--card:#ffffff;
-	--muted:#71737a;
-	--accent:#c86bd7;
-	--shadow: 0 10px 30px rgba(15,18,25,0.06);
+	--muted:#6f6f76;
+	--accent:#f17cd8;
+	--accent-2:#c86bd7;
+	--shadow: 0 18px 40px rgba(15,18,25,0.08);
 }
 
 *{box-sizing:border-box}
@@ -15,12 +16,14 @@ body{
 	margin:0;color:#111;
 }
 
+/* HEADER */
 .ui-header{
 	position:sticky;top:0;z-index:50;
 	background:linear-gradient(90deg,var(--card),#fff);
-	padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;
-	box-shadow:0 6px 20px rgba(12,15,20,0.05);
-	border-left:6px solid var(--accent);
+	padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+	box-shadow:0 10px 30px rgba(12,15,20,0.06);
+	border-left:6px solid var(--accent-2);
+	backdrop-filter: blur(4px);
 }
 
 .ui-container{max-width:1100px;margin:20px auto;padding:18px}
@@ -64,6 +67,30 @@ body{
 .event-hero{width:100%;height:320px;border-radius:12px;background-size:cover;background-position:center;box-shadow:var(--shadow)}
 
 .small-note{color:var(--muted);font-size:13px;margin-top:8px}
+
+/* HERO (nuevo estilo similar al ejemplo proporcionado) */
+.hero{margin:24px 0}
+.hero-inner{position:relative;overflow:hidden;border-radius:40px;border:5px solid var(--accent);min-height:420px;box-shadow:
+	0 0 30px rgba(241,124,216,0.18),
+	inset 0 0 30px rgba(241,124,216,0.06);
+}
+
+.hero-inner::before{content:'';position:absolute;inset:0;border-radius:36px;z-index:2;
+  background:linear-gradient(to bottom, rgba(255,192,203,0.25) 0%, rgba(255,192,203,0.08) 30%, rgba(255,192,203,0.08) 70%, rgba(255,192,203,0.25) 100%);
+  pointer-events:none}
+
+.hero-text{position:relative;z-index:3;color:#fff;padding:48px 32px;max-width:720px}
+.hero-text h1{font-size:2.6rem;margin:0 0 8px;font-weight:900;text-shadow:3px 3px 10px rgba(0,0,0,0.7)}
+.hero-text p{font-size:1.05rem;margin:0 0 16px;color:#fff;text-shadow:2px 2px 8px rgba(0,0,0,0.6)}
+
+.hero-videos{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;overflow:hidden}
+.hero-videos video{position:absolute;top:50%;left:50%;min-width:100%;min-height:100%;width:auto;height:auto;transform:translate(-50%,-50%);object-fit:cover;opacity:0;transition:opacity 1s ease-in-out}
+.hero-videos video[style*="display: block"]{opacity:1}
+
+/* navigation dots (simple centered container) */
+.hero-dots{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);z-index:4;display:flex;gap:10px;background:rgba(0,0,0,0.35);padding:8px 14px;border-radius:999px}
+.hero-dots .dot{width:12px;height:12px;border-radius:50%;background:rgba(255,255,255,0.6);border:2px solid rgba(255,255,255,0.9)}
+.hero-dots .dot.active{background:white;box-shadow:0 0 12px rgba(255,255,255,0.9);transform:scale(1.25)}
 
 /* Simple footer spacing */
 footer{height:40px}
