@@ -12,18 +12,8 @@ except Exception:
     class _WinsoundFallback:
         SND_FILENAME = 0
         SND_ASYNC = 0
-
         @staticmethod
-    ,
-    {
-        'id': 'tbom',
-        'monitor_key': 'tbom',
-        'title': 'The Book of Mormon',
-        'place': 'Teatro Rialto, Madrid',
-        'date': '2026-02-14 19:00',
-        'summary': 'Comedia musical irreverente y galardonada.',
-        'image': '/static/ui/images/book_of_mormon.jpg'
-    }
+        def PlaySound(*args, **kwargs):
             return False
 
     winsound = _WinsoundFallback()
