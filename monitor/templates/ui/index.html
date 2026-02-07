@@ -31,80 +31,118 @@
     <section id="musicals" class="grid musicals-grid" aria-label="Musicales destacados">
       <h2 class="section-title">Musicales destacados</h2>
       <div class="cards-row">
-        <article class="card" data-id="wicked">
+        <article class="musical-card" data-id="wicked">
           <div class="thumb" style="background-image:url('/static/ui/images/wicked.jpg')" role="img" aria-label="Wicked"></div>
-          <div class="card-body">
-            <div class="card-head"><h3>Wicked</h3><span class="date-pill">—</span></div>
-            <p class="meta">Musical — España</p>
-            <div class="card-actions">
-              <a class="btn btn-primary" href="https://wickedelmusical.com/" target="_blank" rel="noopener">Sitio</a>
-              <a class="btn btn-ghost" href="https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01" target="_blank" rel="noopener">Entradas</a>
-            </div>
-            <div class="card-extra">
-              <p>Un viaje musical por las historias que marcaron una generación. Haz click en los enlaces para visitar web, elenco o comprar entradas.</p>
-              <div class="card-actions" style="margin-top:.5rem">
-                <a class="btn" href="https://wickedelmusical.com/elenco" target="_blank" rel="noopener">Elenco</a>
-                <a class="btn" href="https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01" target="_blank" rel="noopener">Comprar entradas</a>
-              </div>
-            </div>
+          <div class="card-footer">
+            <div class="title">Wicked</div>
+            <button class="expand-btn" aria-label="Expandir">▾</button>
           </div>
         </article>
 
-        <article class="card" data-id="houdini">
+        <article class="musical-card" data-id="houdini">
           <div class="thumb" style="background-image:url('/static/ui/images/houdini.jpg')" role="img" aria-label="Houdini"></div>
-          <div class="card-body">
-            <div class="card-head"><h3>Houdini</h3><span class="date-pill">—</span></div>
-            <p class="meta">Musical — España</p>
-            <div class="card-actions">
-              <a class="btn btn-primary" href="https://www.houdinielmusical.com" target="_blank" rel="noopener">Sitio</a>
-            </div>
-            <div class="card-extra">
-              <p>Información y noticias sobre Houdini. Visita la web oficial para detalles de elenco y venta de entradas.</p>
-              <div class="card-actions" style="margin-top:.5rem">
-                <a class="btn" href="https://www.houdinielmusical.com" target="_blank" rel="noopener">Ver sitio</a>
-              </div>
-            </div>
+          <div class="card-footer">
+            <div class="title">Houdini</div>
+            <button class="expand-btn" aria-label="Expandir">▾</button>
           </div>
         </article>
 
-        <article class="card" data-id="les_mis">
-          <div class="thumb" style="background-image:url('/static/ui/images/les_mis.jpg')" role="img" aria-label="Los Miserables"></div>
-          <div class="card-body">
-            <div class="card-head"><h3>Les Misérables</h3><span class="date-pill">—</span></div>
-            <p class="meta">Musical — España</p>
-            <div class="card-actions">
-              <a class="btn btn-primary" href="https://miserableselmusical.es/" target="_blank" rel="noopener">Sitio</a>
-              <a class="btn btn-ghost" href="https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01" target="_blank" rel="noopener">Entradas</a>
-            </div>
-            <div class="card-extra">
-              <p>Clásico musical en una nueva producción. Consulta elenco y fechas desde la web oficial.</p>
-              <div class="card-actions" style="margin-top:.5rem">
-                <a class="btn" href="https://miserableselmusical.es/elenco" target="_blank" rel="noopener">Elenco</a>
-                <a class="btn" href="https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01" target="_blank" rel="noopener">Comprar entradas</a>
-              </div>
-            </div>
+        <article class="musical-card" data-id="les_mis">
+          <div class="thumb" style="background-image:url('/static/ui/images/les_mis.jpg')" role="img" aria-label="Les Miserables"></div>
+          <div class="card-footer">
+            <div class="title">Los Miserables</div>
+            <button class="expand-btn" aria-label="Expandir">▾</button>
           </div>
         </article>
 
-        <article class="card" data-id="tbom">
+        <article class="musical-card" data-id="tbom">
           <div class="thumb" style="background-image:url('/static/ui/images/book_of_mormon.jpg')" role="img" aria-label="The Book of Mormon"></div>
-          <div class="card-body">
-            <div class="card-head"><h3>The Book of Mormon</h3><span class="date-pill">—</span></div>
-            <p class="meta">Musical — España</p>
-            <div class="card-actions">
-              <a class="btn btn-primary" href="https://thebookofmormonelmusical.es/" target="_blank" rel="noopener">Sitio</a>
-              <a class="btn btn-ghost" href="https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01" target="_blank" rel="noopener">Entradas</a>
-            </div>
-            <div class="card-extra">
-              <p>Comedia musical que ha triunfado internacionalmente. Consulta fechas y compra entradas en la web oficial.</p>
-              <div class="card-actions" style="margin-top:.5rem">
-                <a class="btn" href="https://thebookofmormonelmusical.es/elenco/" target="_blank" rel="noopener">Elenco</a>
-                <a class="btn" href="https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01" target="_blank" rel="noopener">Comprar entradas</a>
-              </div>
-            </div>
+          <div class="card-footer">
+            <div class="title">The Book of Mormon</div>
+            <button class="expand-btn" aria-label="Expandir">▾</button>
           </div>
         </article>
       </div>
+
+      <div id="musical-details" class="musical-details" aria-live="polite"></div>
+
+      <style>
+        /* Cards - layout like reference */
+        .musicals-grid{ padding:1.5rem 0; }
+        .cards-row{ display:flex; gap:1rem; align-items:flex-start; flex-wrap:wrap }
+        .musical-card{ width:340px; border-radius:12px; overflow:hidden; background:linear-gradient(180deg,#fff,#f8f3f7); box-shadow:0 8px 20px rgba(0,0,0,0.06); cursor:pointer; }
+        .musical-card .thumb{ height:170px; background-size:cover; background-position:center; }
+        .musical-card .card-footer{ display:flex; align-items:center; justify-content:space-between; padding:.6rem .8rem; }
+        .musical-card .title{ font-weight:600; color:#e91e63 }
+        .expand-btn{ border:0; background:#fff; border-radius:10px; width:34px; height:34px; box-shadow:0 3px 8px rgba(0,0,0,0.06); cursor:pointer }
+
+        /* Details area (full-width row) */
+        .musical-details{ margin-top:1.25rem }
+        .musical-details .detail{ display:flex; gap:1rem; align-items:flex-start; background:#fff; padding:1rem; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.04) }
+        .musical-details .detail .detail-thumb{ width:120px; height:90px; background-size:cover; background-position:center; border-radius:8px }
+        .musical-details .detail .detail-body{ flex:1 }
+        .musical-details .detail h3{ margin:0 0 .25rem 0 }
+        .musical-details .detail p{ margin:0 0 .5rem 0; color:#666 }
+        .musical-details .detail .actions{ display:flex; gap:.5rem; }
+        .musical-details .close-detail{ margin-left:.5rem; border:0; background:transparent; cursor:pointer }
+      </style>
+
+      <script>
+        (function(){
+          const data = {
+            wicked: {
+              title: 'Wicked',
+              img: '/static/ui/images/wicked.jpg',
+              desc: 'Un viaje musical por las historias que marcaron una generación.',
+              links: [{t:'Sitio',u:'https://wickedelmusical.com/'},{t:'Entradas',u:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01'},{t:'Elenco',u:'https://wickedelmusical.com/elenco'}]
+            },
+            houdini: {
+              title: 'Houdini',
+              img: '/static/ui/images/houdini.jpg',
+              desc: 'Información y noticias sobre Houdini. Visita la web oficial para detalles de elenco y venta de entradas.',
+              links: [{t:'Sitio',u:'https://www.houdinielmusical.com'}]
+            },
+            les_mis: {
+              title: 'Les Misérables',
+              img: '/static/ui/images/les_mis.jpg',
+              desc: 'Clásico musical en una nueva producción. Consulta elenco y fechas desde la web oficial.',
+              links: [{t:'Sitio',u:'https://miserableselmusical.es/'},{t:'Entradas',u:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01'},{t:'Elenco',u:'https://miserableselmusical.es/elenco'}]
+            },
+            tbom: {
+              title: 'The Book of Mormon',
+              img: '/static/ui/images/book_of_mormon.jpg',
+              desc: 'Comedia musical que ha triunfado internacionalmente. Consulta fechas y compra entradas en la web oficial.',
+              links: [{t:'Sitio',u:'https://thebookofmormonelmusical.es/'},{t:'Entradas',u:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01'},{t:'Elenco',u:'https://thebookofmormonelmusical.es/elenco/'}]
+            }
+          }
+
+          const cards = Array.from(document.querySelectorAll('.musical-card'))
+          const details = document.getElementById('musical-details')
+
+          function renderDetail(info){
+            if(!info) return
+            const linksHtml = info.links.map(l=>`<a class="btn btn-ghost" href="${l.u}" target="_blank" rel="noopener">${l.t}</a>`).join(' ')
+            details.innerHTML = `\n              <div class="detail">\n                <div class="detail-thumb" style="background-image:url('${info.img}')"></div>\n                <div class="detail-body">\n                  <h3>${info.title}</h3>\n                  <p>${info.desc}</p>\n                  <div class="actions">${linksHtml}</div>\n                </div>\n                <div><button class="close-detail" aria-label="Cerrar">✕</button></div>\n              </div>\n            `
+            details.querySelector('.close-detail').addEventListener('click', ()=>{ details.innerHTML = '' })
+            details.scrollIntoView({behavior:'smooth', block:'start'})
+          }
+
+          cards.forEach(card=>{
+            const id = card.dataset.id
+            const btn = card.querySelector('.expand-btn')
+            btn.addEventListener('click', (e)=>{
+              e.stopPropagation()
+              const info = data[id]
+              renderDetail(info)
+            })
+            // clicking the card also expands
+            card.addEventListener('click', ()=>{
+              const info = data[id]
+              renderDetail(info)
+            })
+          })
+        })()
+      </script>
     </section>
 
     <script>
