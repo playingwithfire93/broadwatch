@@ -34,7 +34,9 @@
       <h2 class="section-title">Musicales destacados</h2>
       <div class="cards-row">
         <article class="musical-card" data-id="wicked">
-          <div class="thumb" data-images="/static/fotos/wicked/WICKED1.webp,/static/fotos/wicked/WICKED2.jpg,/static/fotos/wicked/WICKED3.jpg" style="background-image:url('/static/fotos/wicked/WICKED1.webp')" role="img" aria-label="Wicked"></div>
+          <div class="thumb" data-images="/static/fotos/wicked/WICKED1.webp,/static/fotos/wicked/WICKED2.jpg,/static/fotos/wicked/WICKED3.jpg" style="background-image:url('/static/fotos/wicked/WICKED1.webp')" role="img" aria-label="Wicked">
+            <div class="thumb-placeholder" aria-hidden="true"></div>
+          </div>
           <div class="card-footer">
             <div>
               <div class="title">Wicked</div>
@@ -45,7 +47,9 @@
         </article>
 
         <article class="musical-card" data-id="houdini">
-          <div class="thumb" data-images="/static/fotos/Houdini/HOUDINI1.jpg,/static/fotos/Houdini/HOUDINI6.jpg,/static/fotos/Houdini/HOUDINI7.jpg" style="background-image:url('/static/fotos/Houdini/HOUDINI1.jpg')" role="img" aria-label="Houdini"></div>
+          <div class="thumb" data-images="/static/fotos/Houdini/HOUDINI1.jpg,/static/fotos/Houdini/HOUDINI6.jpg,/static/fotos/Houdini/HOUDINI7.jpg" style="background-image:url('/static/fotos/Houdini/HOUDINI1.jpg')" role="img" aria-label="Houdini">
+            <div class="thumb-placeholder" aria-hidden="true"></div>
+          </div>
           <div class="card-footer">
             <div>
               <div class="title">Houdini</div>
@@ -56,7 +60,9 @@
         </article>
 
         <article class="musical-card" data-id="les_mis">
-          <div class="thumb" data-images="/static/fotos/los_miserables/LESMIS1.jpg,/static/fotos/los_miserables/LESMIS2.jpg,/static/fotos/los_miserables/LESMIS3.png" style="background-image:url('/static/fotos/los_miserables/LESMIS1.jpg')" role="img" aria-label="Les Miserables"></div>
+          <div class="thumb" data-images="/static/fotos/los_miserables/LESMIS1.jpg,/static/fotos/los_miserables/LESMIS2.jpg,/static/fotos/los_miserables/LESMIS3.png" style="background-image:url('/static/fotos/los_miserables/LESMIS1.jpg')" role="img" aria-label="Les Miserables">
+            <div class="thumb-placeholder" aria-hidden="true"></div>
+          </div>
           <div class="card-footer">
             <div>
               <div class="title">Los Miserables</div>
@@ -67,7 +73,9 @@
         </article>
 
         <article class="musical-card" data-id="tbom">
-          <div class="thumb" data-images="/static/fotos/book_of_mormon/BOM1.jpg,/static/fotos/book_of_mormon/BOM5.jpg,/static/fotos/book_of_mormon/BOM3.jpg" style="background-image:url('/static/fotos/book_of_mormon/BOM1.jpg')" role="img" aria-label="The Book of Mormon"></div>
+          <div class="thumb" data-images="/static/fotos/book_of_mormon/BOM1.jpg,/static/fotos/book_of_mormon/BOM5.jpg,/static/fotos/book_of_mormon/BOM3.jpg" style="background-image:url('/static/fotos/book_of_mormon/BOM1.jpg')" role="img" aria-label="The Book of Mormon">
+            <div class="thumb-placeholder" aria-hidden="true"></div>
+          </div>
           <div class="card-footer">
             <div>
               <div class="title">The Book of Mormon</div>
@@ -82,7 +90,7 @@
 
       <style>
         /* Cards - updated visual styling to match reference */
-        .musicals-grid{ padding:2rem 0; }
+        .musicals-grid{ padding:2rem 0; display:flex; flex-direction:column; align-items:center; }
         .musicals-grid .section-title{ font-size:1.25rem; color:#333; margin-bottom:1rem }
 
         /* center panel for cards */
@@ -91,7 +99,8 @@
         /* card */
         .musical-card{ width:300px; border-radius:12px; overflow:hidden; background:#fff; border:1px solid rgba(226, 69, 146, 0.05); box-shadow:0 12px 28px rgba(230,200,220,0.10); cursor:pointer; transition:transform .14s ease, box-shadow .14s ease }
         .musical-card:hover{ transform:translateY(-6px); box-shadow:0 20px 40px rgba(230,200,220,0.14) }
-        .musical-card .thumb{ height:140px; background-size:cover; background-position:center; display:block; background-color:#fff; background-image: linear-gradient(180deg, rgba(255,245,250,0.7), rgba(255,245,250,0.3)); }
+        .musical-card .thumb{ height:140px; background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; background-color:#fff }
+        .musical-card .thumb-placeholder{ width:180px; height:90px; background:#fff; border-radius:10px; box-shadow:0 6px 16px rgba(220,180,200,0.12); }
 
         .musical-card .card-footer{ display:flex; align-items:center; justify-content:space-between; padding:.75rem .9rem; }
         .musical-card .title{ font-weight:700; color:#ff4da6; font-size:15px }
@@ -176,7 +185,9 @@
             let i = 0
             let intervalId = null
             const setBg = (idx) => thumb.style.backgroundImage = `url('${imgs[idx]}')`
+            const placeholder = thumb.querySelector('.thumb-placeholder')
             const start = () => {
+              if (placeholder) placeholder.style.display = 'none'
               if (intervalId) return
               intervalId = setInterval(() => {
                 i = (i + 1) % imgs.length
