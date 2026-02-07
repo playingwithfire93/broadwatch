@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="/static/ui/styles.css">
   </head>
   <body>
+    <main class="ui-container">
+      <section id="events" class="grid" aria-live="polite"></section>
     </main>
 
     <style>
@@ -32,33 +34,45 @@
       <h2 class="section-title">Musicales destacados</h2>
       <div class="cards-row">
         <article class="musical-card" data-id="wicked">
-          <div class="thumb" style="background-image:url('/static/ui/images/wicked.jpg')" role="img" aria-label="Wicked"></div>
+          <div class="thumb" data-images="/static/fotos/wicked/WICKED1.webp,/static/fotos/wicked/WICKED2.jpg,/static/fotos/wicked/WICKED3.jpg" style="background-image:url('/static/fotos/wicked/WICKED1.webp')" role="img" aria-label="Wicked"></div>
           <div class="card-footer">
-            <div class="title">Wicked</div>
+            <div>
+              <div class="title">Wicked</div>
+              <div class="status-bar"><span class="pill">Sin cambios</span></div>
+            </div>
             <button class="expand-btn" aria-label="Expandir">▾</button>
           </div>
         </article>
 
         <article class="musical-card" data-id="houdini">
-          <div class="thumb" style="background-image:url('/static/ui/images/houdini.jpg')" role="img" aria-label="Houdini"></div>
+          <div class="thumb" data-images="/static/fotos/Houdini/HOUDINI1.jpg,/static/fotos/Houdini/HOUDINI6.jpg,/static/fotos/Houdini/HOUDINI7.jpg" style="background-image:url('/static/fotos/Houdini/HOUDINI1.jpg')" role="img" aria-label="Houdini"></div>
           <div class="card-footer">
-            <div class="title">Houdini</div>
+            <div>
+              <div class="title">Houdini</div>
+              <div class="status-bar"><span class="pill">Sin cambios</span></div>
+            </div>
             <button class="expand-btn" aria-label="Expandir">▾</button>
           </div>
         </article>
 
         <article class="musical-card" data-id="les_mis">
-          <div class="thumb" style="background-image:url('/static/ui/images/les_mis.jpg')" role="img" aria-label="Les Miserables"></div>
+          <div class="thumb" data-images="/static/fotos/los_miserables/LESMIS1.jpg,/static/fotos/los_miserables/LESMIS2.jpg,/static/fotos/los_miserables/LESMIS3.png" style="background-image:url('/static/fotos/los_miserables/LESMIS1.jpg')" role="img" aria-label="Les Miserables"></div>
           <div class="card-footer">
-            <div class="title">Los Miserables</div>
+            <div>
+              <div class="title">Los Miserables</div>
+              <div class="status-bar"><span class="pill">Sin cambios</span></div>
+            </div>
             <button class="expand-btn" aria-label="Expandir">▾</button>
           </div>
         </article>
 
         <article class="musical-card" data-id="tbom">
-          <div class="thumb" style="background-image:url('/static/ui/images/book_of_mormon.jpg')" role="img" aria-label="The Book of Mormon"></div>
+          <div class="thumb" data-images="/static/fotos/book_of_mormon/BOM1.jpg,/static/fotos/book_of_mormon/BOM5.jpg,/static/fotos/book_of_mormon/BOM3.jpg" style="background-image:url('/static/fotos/book_of_mormon/BOM1.jpg')" role="img" aria-label="The Book of Mormon"></div>
           <div class="card-footer">
-            <div class="title">The Book of Mormon</div>
+            <div>
+              <div class="title">The Book of Mormon</div>
+              <div class="status-bar"><span class="pill">Sin cambios</span></div>
+            </div>
             <button class="expand-btn" aria-label="Expandir">▾</button>
           </div>
         </article>
@@ -67,24 +81,37 @@
       <div id="musical-details" class="musical-details" aria-live="polite"></div>
 
       <style>
-        /* Cards - layout like reference */
-        .musicals-grid{ padding:1.5rem 0; }
-        .cards-row{ display:flex; gap:1rem; align-items:flex-start; flex-wrap:wrap }
-        .musical-card{ width:340px; border-radius:12px; overflow:hidden; background:linear-gradient(180deg,#fff,#f8f3f7); box-shadow:0 8px 20px rgba(0,0,0,0.06); cursor:pointer; }
-        .musical-card .thumb{ height:170px; background-size:cover; background-position:center; }
-        .musical-card .card-footer{ display:flex; align-items:center; justify-content:space-between; padding:.6rem .8rem; }
-        .musical-card .title{ font-weight:600; color:#e91e63 }
-        .expand-btn{ border:0; background:#fff; border-radius:10px; width:34px; height:34px; box-shadow:0 3px 8px rgba(0,0,0,0.06); cursor:pointer }
+        /* Cards - updated visual styling to match reference */
+        .musicals-grid{ padding:2rem 0; }
+        .musicals-grid .section-title{ font-size:1.25rem; color:#333; margin-bottom:1rem }
+
+        /* center panel for cards */
+        .cards-row{ display:flex; gap:1rem; align-items:flex-start; flex-wrap:wrap; max-width:1180px; margin:0 auto; padding:1.1rem; background:linear-gradient(180deg,#fff,#fff); border-radius:16px }
+
+        /* card */
+        .musical-card{ width:320px; border-radius:12px; overflow:hidden; background:#fff; border:1px solid rgba(226, 69, 146, 0.06); box-shadow:0 12px 28px rgba(230,200,220,0.12); cursor:pointer; transition:transform .14s ease, box-shadow .14s ease }
+        .musical-card:hover{ transform:translateY(-6px); box-shadow:0 18px 36px rgba(230,200,220,0.16) }
+        .musical-card .thumb{ height:160px; background-size:cover; background-position:center; display:block }
+
+        .musical-card .card-footer{ display:flex; align-items:center; justify-content:space-between; padding:.7rem .9rem; }
+        .musical-card .title{ font-weight:700; color:#ff4da6; font-size:16px }
+
+        /* expand button: pink circular */
+        .expand-btn{ border:0; background:#fff; border-radius:18px; width:36px; height:36px; box-shadow:0 3px 8px rgba(0,0,0,0.06); cursor:pointer; color:#ff4da6; font-weight:700 }
+        .expand-btn:active{ transform:scale(.98) }
+
+        .musical-card .status-bar{ margin-top:6px }
+        .musical-card .pill{ display:inline-block; background:linear-gradient(90deg,#ffdff0,#ffeaf6); color:#c2185b; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:600 }
 
         /* Details area (full-width row) */
-        .musical-details{ margin-top:1.25rem }
-        .musical-details .detail{ display:flex; gap:1rem; align-items:flex-start; background:#fff; padding:1rem; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.04) }
-        .musical-details .detail .detail-thumb{ width:120px; height:90px; background-size:cover; background-position:center; border-radius:8px }
+        .musical-details{ margin-top:1.25rem; max-width:1180px; margin-left:auto; margin-right:auto }
+        .musical-details .detail{ display:flex; gap:1rem; align-items:flex-start; background:#fff; padding:1rem; border-radius:12px; box-shadow:0 8px 28px rgba(230,200,220,0.08) }
+        .musical-details .detail .detail-thumb{ width:140px; height:100px; background-size:cover; background-position:center; border-radius:8px }
         .musical-details .detail .detail-body{ flex:1 }
-        .musical-details .detail h3{ margin:0 0 .25rem 0 }
+        .musical-details .detail h3{ margin:0 0 .25rem 0; color:#333 }
         .musical-details .detail p{ margin:0 0 .5rem 0; color:#666 }
         .musical-details .detail .actions{ display:flex; gap:.5rem; }
-        .musical-details .close-detail{ margin-left:.5rem; border:0; background:transparent; cursor:pointer }
+        .musical-details .close-detail{ margin-left:.5rem; border:0; background:transparent; cursor:pointer; color:#999 }
       </style>
 
       <script>
@@ -92,25 +119,25 @@
           const data = {
             wicked: {
               title: 'Wicked',
-              img: '/static/ui/images/wicked.jpg',
+              img: '/static/fotos/wicked/WICKED1.webp',
               desc: 'Un viaje musical por las historias que marcaron una generación.',
               links: [{t:'Sitio',u:'https://wickedelmusical.com/'},{t:'Entradas',u:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01'},{t:'Elenco',u:'https://wickedelmusical.com/elenco'}]
             },
             houdini: {
               title: 'Houdini',
-              img: '/static/ui/images/houdini.jpg',
+              img: '/static/fotos/Houdini/HOUDINI1.jpg',
               desc: 'Información y noticias sobre Houdini. Visita la web oficial para detalles de elenco y venta de entradas.',
               links: [{t:'Sitio',u:'https://www.houdinielmusical.com'}]
             },
             les_mis: {
               title: 'Les Misérables',
-              img: '/static/ui/images/les_mis.jpg',
+              img: '/static/fotos/los_miserables/LESMIS1.jpg',
               desc: 'Clásico musical en una nueva producción. Consulta elenco y fechas desde la web oficial.',
               links: [{t:'Sitio',u:'https://miserableselmusical.es/'},{t:'Entradas',u:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01'},{t:'Elenco',u:'https://miserableselmusical.es/elenco'}]
             },
             tbom: {
               title: 'The Book of Mormon',
-              img: '/static/ui/images/book_of_mormon.jpg',
+              img: '/static/fotos/book_of_mormon/BOM1.jpg',
               desc: 'Comedia musical que ha triunfado internacionalmente. Consulta fechas y compra entradas en la web oficial.',
               links: [{t:'Sitio',u:'https://thebookofmormonelmusical.es/'},{t:'Entradas',u:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01'},{t:'Elenco',u:'https://thebookofmormonelmusical.es/elenco/'}]
             }
@@ -141,63 +168,32 @@
               renderDetail(info)
             })
           })
+
+          // Initialize lightweight thumbnail slideshows for each card
+          document.querySelectorAll('.musical-card .thumb').forEach(thumb => {
+            const imgs = (thumb.dataset.images || '').split(',').map(s => s.trim()).filter(Boolean)
+            if (!imgs.length) return
+            let i = 0
+            let intervalId = null
+            const setBg = (idx) => thumb.style.backgroundImage = `url('${imgs[idx]}')`
+            const start = () => {
+              if (intervalId) return
+              intervalId = setInterval(() => {
+                i = (i + 1) % imgs.length
+                setBg(i)
+              }, 2500)
+            }
+            const stop = () => { if (intervalId) { clearInterval(intervalId); intervalId = null } }
+            // start autoplay, pause on hover
+            setBg(0)
+            start()
+            thumb.addEventListener('mouseenter', stop)
+            thumb.addEventListener('mouseleave', start)
+            // keep reference for potential future cleanup
+            thumb.dataset._slideshowRunning = '1'
+          })
         })()
       </script>
-    </section>
-
-    <script>
-      (function(){
-        const container = document.getElementById('musicals')
-        if(!container) return
-        const cards = Array.from(container.querySelectorAll('.card'))
-        // Accordion: only one open at a time
-        cards.forEach(card => {
-          // prevent clicks on links/buttons from toggling
-          card.querySelectorAll('a, button').forEach(el => el.addEventListener('click', e=> e.stopPropagation()))
-          card.addEventListener('click', (e)=>{
-            const isExpanded = card.classList.contains('expanded')
-            // collapse all
-            cards.forEach(c=> c.classList.remove('expanded'))
-            // toggle the clicked one (open if it was closed)
-            if(!isExpanded) card.classList.add('expanded')
-          })
-        })
-      })()
-    </script>
-
-        <article class="card">
-          <div class="thumb" style="background-image:url('/static/ui/images/les_mis.jpg')" role="img" aria-label="Los Miserables"></div>
-          <div class="card-body">
-            <div class="card-head">
-              <h3>Les Misérables</h3>
-              <span class="date-pill">—</span>
-            </div>
-            <p class="meta">Musical — España</p>
-            <div class="card-actions">
-              <a class="btn btn-primary" href="https://miserableselmusical.es/" target="_blank" rel="noopener">Sitio</a>
-              <a class="btn btn-primary" href="https://miserableselmusical.es/elenco" target="_blank" rel="noopener">Elenco</a>
-              <a class="btn btn-ghost" href="https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01" target="_blank" rel="noopener">Entradas</a>
-            </div>
-          </div>
-        </article>
-
-        <article class="card">
-          <div class="thumb" style="background-image:url('/static/ui/images/book_of_mormon.jpg')" role="img" aria-label="The Book of Mormon"></div>
-          <div class="card-body">
-            <div class="card-head">
-              <h3>The Book of Mormon</h3>
-              <span class="date-pill">—</span>
-            </div>
-            <p class="meta">Musical — España</p>
-            <div class="card-actions">
-              <a class="btn btn-primary" href="https://thebookofmormonelmusical.es/" target="_blank" rel="noopener">Sitio</a>
-              <a class="btn btn-primary" href="https://thebookofmormonelmusical.es/elenco" target="_blank" rel="noopener">Elenco</a>
-              <a class="btn btn-ghost" href="https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01" target="_blank" rel="noopener">Entradas</a>
-            </div>
-          </div>
-        </article>
-      </div>
-    </section>
 
     <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
 
