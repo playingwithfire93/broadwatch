@@ -125,6 +125,17 @@ body{
 .hero-mute .mute-x{opacity:0.9}
 .hero-mute[aria-pressed="false"] .mute-x{opacity:0} /* when not muted, hide the 'x' */
 
+/* Accessibility: focus styles for interactive controls */
+.cta-btn:focus-visible, .btn:focus-visible, .hero-control:focus-visible, .hero-mute:focus-visible {
+	outline: 3px solid rgba(244,168,214,0.38);
+	outline-offset: 4px;
+	border-radius: 999px;
+}
+
+/* Ensure hero text remains readable on very bright video frames */
+.hero-inner::after{content:'';position:absolute;inset:0;border-radius:36px;background:linear-gradient(180deg, rgba(7,7,7,0.18), rgba(7,7,7,0.08));pointer-events:none;z-index:1}
+.hero-text{position:relative;z-index:4}
+
 
 /* Card tweaks: stronger heading and subtle divider */
 .card h3{font-size:20px}
@@ -136,6 +147,26 @@ body{
 	.hero-text{padding:28px}
 	.hero-text h1{font-size:1.9rem}
 	.thumb{width:160px;flex:0 0 160px;height:95px}
+}
+
+/* Mobile-specific tweaks for better UX */
+@media(max-width:600px){
+	.hero-inner{min-height:220px;border-radius:16px;padding:0 8px}
+	.hero-text{padding:20px 16px;max-width:100%}
+	.hero-text h1{font-size:1.5rem;line-height:1.15;margin-bottom:8px}
+	.hero-text p{font-size:0.95rem}
+	.hero-ctas{flex-direction:column;align-items:flex-start;gap:10px;margin-top:12px}
+	.cta-btn{width:100%;padding:12px 18px;border-radius:12px}
+	.hero-control, .hero-mute{width:100%;padding:10px 14px;border-radius:12px}
+	.header-right{gap:8px}
+	.search{min-width:unset; width:160px}
+	.ui-header{padding:10px 12px}
+	/* On small devices, avoid autoplaying video — hide video elements and use hero background/poster */
+	.hero-videos{display:none}
+	/* Ensure cards stack in single column for small screens */
+	.grid{grid-template-columns:1fr}
+	.cards-row{justify-content:flex-start;padding:12px}
+	.musical-card{width:100%;max-width:520px}
 }
 
 /* Simple footer spacing */
