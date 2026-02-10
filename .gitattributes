@@ -1,0 +1,2 @@
+monitor/static/ui/videos/*.mp4 filter=lfs diff=lfs merge=lfs -text
+monitor/static/ui/videos/*.webm filter=lfs diff=lfs merge=lfs -text
