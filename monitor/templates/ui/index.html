@@ -1224,7 +1224,10 @@
       document.getElementById('pp-meta').textContent = `${ev.session} · ${ev.teatro}`
       const btn = document.getElementById('pp-btn')
       btn.style.background = m.color
-      btn.href = ev.tickets
+      const yyyy = ev.date.y
+      const mm   = String(ev.date.m + 1).padStart(2, '0')
+      const dd   = String(ev.date.d).padStart(2, '0')
+      btn.href = ev.tickets === '#' ? '#' : `${ev.tickets}?fecha=${yyyy}${mm}${dd}`
       btn.textContent = ev.tickets === '#' ? 'Próximamente…' : 'Comprar entradas →'
       btn.style.pointerEvents = ev.tickets === '#' ? 'none' : 'auto'
       btn.style.opacity = ev.tickets === '#' ? '.5' : '1'
