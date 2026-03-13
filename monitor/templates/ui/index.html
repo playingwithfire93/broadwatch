@@ -1499,7 +1499,7 @@
     ;(function() {
       const saved = localStorage.getItem('bw_theme')
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      const isDark = saved ? saved === 'dark' : prefersDark
+      const isDark = saved ? saved === 'dark' : false
       if (isDark) document.documentElement.setAttribute('data-theme', 'dark')
       const btn = document.getElementById('theme-toggle')
       function syncIcon() {
