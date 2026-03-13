@@ -1,4 +1,3 @@
-
 import time
 import requests
 from bs4 import BeautifulSoup
@@ -400,7 +399,7 @@ def save_event(monitor_key, url, summary, changes):
     events = events[:MAX_EVENTS]
     try:
         EVENTS_FILE.write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding='utf-8')
-        print(f"\u{1f4be} Evento guardado: {event['title']}")
+        print(f"💾 Evento guardado: {event['title']}")
     except Exception as e:
         print(f"\u274c Error guardando evento: {e}")
     return event
