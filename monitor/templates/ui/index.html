@@ -266,6 +266,49 @@
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
+    .cartelera-precio {
+      font-size: 0.8rem; font-weight: 700;
+    }
+    .cartelera-countdown {
+      font-size: 0.72rem; font-weight: 700;
+      opacity: 0.75; margin-top: auto;
+    }
+    .cartelera-reparto { border-top: 1px solid var(--border); padding-top: 0.5rem; }
+    .reparto-toggle {
+      background: none; border: none; cursor: pointer;
+      font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.04em; padding: 0;
+      display: flex; align-items: center; gap: 0.3rem;
+    }
+    .reparto-arrow { transition: transform .2s; display: inline-block; }
+    .cartelera-reparto.open .reparto-arrow { transform: rotate(180deg); }
+    .reparto-list {
+      list-style: none; max-height: 0; overflow: hidden;
+      transition: max-height .25s ease, margin-top .25s;
+    }
+    .cartelera-reparto.open .reparto-list { max-height: 200px; margin-top: 0.45rem; }
+    .reparto-list li {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-size: 0.72rem; padding: 0.18rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .reparto-list li:last-child { border-bottom: none; }
+    .reparto-rol { color: var(--ink3); font-weight: 600; }
+    .reparto-actor { color: var(--ink); font-weight: 700; text-align: right; }
+    .cartelera-comunidad {
+      display: flex; gap: 0.5rem; flex-wrap: wrap;
+    }
+    .comunidad-link {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      font-size: 0.68rem; font-weight: 700;
+      padding: 0.22rem 0.6rem; border-radius: 999px;
+      text-decoration: none;
+      background: var(--border);
+      color: var(--ink2);
+      border: 1.5px solid var(--border);
+      transition: background .15s, color .15s;
+    }
+    .comunidad-link:hover { background: var(--ink); color: #fff; }
     .cartelera-btn {
       display: block; margin-top: auto;
       padding: 0.55rem 1rem; border-radius: 10px;
@@ -283,6 +326,53 @@
       border: 1.5px dashed rgba(15,14,12,0.15);
       border-radius: 10px;
     }
+
+    /* ── PRÓXIMAMENTE ── */
+    .proximamente-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    .prox-card {
+      background: var(--surface);
+      border-radius: 16px;
+      border: 1.5px dashed var(--border);
+      padding: 1.25rem 1.4rem;
+      display: flex; align-items: center; gap: 1.1rem;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .prox-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .prox-icon {
+      width: 48px; height: 48px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .prox-info { flex: 1; min-width: 0; }
+    .prox-name {
+      font-family: 'Fraunces', serif;
+      font-size: 1rem; font-weight: 900; color: var(--ink);
+      margin-bottom: 0.2rem;
+    }
+    .prox-status {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;
+      text-transform: uppercase; padding: 0.18rem 0.5rem;
+      border-radius: 999px; display: inline-block; margin-bottom: 0.4rem;
+    }
+    .prox-desc {
+      font-size: 0.76rem; color: var(--ink3); font-weight: 600;
+      line-height: 1.4;
+    }
+    .prox-notify {
+      flex-shrink: 0;
+      font-size: 0.72rem; font-weight: 700;
+      padding: 0.4rem 0.8rem; border-radius: 999px;
+      background: none; border: 1.5px solid var(--border);
+      color: var(--ink2); cursor: pointer;
+      text-decoration: none;
+      transition: background .15s, color .15s, border-color .15s;
+      white-space: nowrap;
+    }
+    .prox-notify:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
 
     /* ── NOVEDADES ── */
     .section {
@@ -574,6 +664,7 @@
       </a>
       <div class="nav-links">
         <a href="#novedades" class="nav-link">Novedades</a>
+        <a href="#proximamente" class="nav-link">Próximamente</a>
         <a href="#calendario" class="nav-link">Calendario</a>
         <a href="#sugerencias" class="nav-link">Sugerencias</a>
       </div>
@@ -631,6 +722,15 @@
       <div class="rule"></div>
     </div>
     <div class="cartelera-grid fu fu2" id="cartelera-grid"></div>
+  </section>
+
+  <!-- PRÓXIMAMENTE -->
+  <section class="section" id="proximamente" style="margin-top:3.5rem;">
+    <div class="section-hd fu fu1">
+      <h2>Próximamente</h2>
+      <div class="rule"></div>
+    </div>
+    <div class="proximamente-grid fu fu2" id="proximamente-grid"></div>
   </section>
 
   <!-- NOVEDADES -->
@@ -748,10 +848,10 @@
     }
 
     const MUSICALS = {
-      wicked:  { name:'Wicked',            color:'#7c3aed', light:'#ede9fe', cls:'ev-wicked',  tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01',  teatro:'Teatro Coliseum, Madrid' },
-      lesmis:  { name:'Los Miserables',    color:'#dc2626', light:'#fee2e2', cls:'ev-lesmis',  tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01',    teatro:'Teatro Nuevo Apolo, Madrid' },
-      tbom:    { name:'Book of Mormon',    color:'#0891b2', light:'#cffafe', cls:'ev-tbom',    tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', teatro:'Teatro Lope de Vega, Madrid' },
-      houdini: { name:'Houdini',           color:'#d97706', light:'#fef3c7', cls:'ev-houdini', tickets:'#',                                                                         teatro:'Madrid · por confirmar' },
+      wicked:  { name:'Wicked',            color:'#7c3aed', light:'#ede9fe', cls:'ev-wicked',  tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01',  teatro:'Teatro Nuevo Alcalá, Madrid',  telegram:'https://t.me/wickedespana',    discord:null },
+      lesmis:  { name:'Los Miserables',    color:'#dc2626', light:'#fee2e2', cls:'ev-lesmis',  tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01',    teatro:'Teatro Apolo, Madrid',         telegram:'https://t.me/losmiserableses', discord:null },
+      tbom:    { name:'Book of Mormon',    color:'#0891b2', light:'#cffafe', cls:'ev-tbom',    tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', teatro:'Teatro Rialto, Madrid',  telegram:'https://t.me/bookofmormones',  discord:null },
+      houdini: { name:'Houdini',           color:'#d97706', light:'#fef3c7', cls:'ev-houdini', tickets:'#',                                                                         teatro:'Madrid · por confirmar',       telegram:null,                           discord:null },
     }
 
     // Genera funciones de Jueves a Domingo para todos los musicales del mes
@@ -1067,17 +1167,37 @@
 
     // ── EN CARTELERA ─────────────────────────────────────────────────────────
     const CARTELERA = [
-      { key:'wicked',  name:'Wicked',          teatro:'Teatro Coliseum, Madrid', tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01',  soon:false },
-      { key:'lesmis',  name:'Los Miserables',  teatro:'Teatro Nuevo Apolo, Madrid', tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01', soon:false },
-      { key:'tbom',    name:'Book of Mormon',  teatro:'Teatro Lope de Vega, Madrid', tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', soon:false },
-      { key:'houdini', name:'Houdini',         teatro:'Madrid · por confirmar', tickets:'#', soon:true },
+      { key:'wicked',  name:'Wicked',         teatro:'Teatro Nuevo Alcalá, Madrid', precio:'Desde €24,45', tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01',  soon:false,
+        reparto:[{rol:'Elphaba',actor:'Cristina Picos'},{rol:'Glinda',actor:'Cristina Llorente'},{rol:'Fiyero',actor:'Xabier Nogales'}] },
+      { key:'lesmis',  name:'Los Miserables', teatro:'Teatro Apolo, Madrid',         precio:'Desde €32',    tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01', soon:false,
+        reparto:[{rol:'Jean Valjean',actor:'Adrián Salzedo'},{rol:'Javert',actor:'Pitu Manubens'},{rol:'Fantine',actor:'Teresa Ferrer'}] },
+      { key:'tbom',    name:'Book of Mormon', teatro:'Teatro Rialto, Madrid',        precio:'Desde €25,50', tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', soon:false,
+        reparto:[{rol:'Elder Price',actor:'Alexandre Ars'},{rol:'Elder Cunningham',actor:'Alejandro Mesa'},{rol:'Nabulungi',actor:'Aisha Fay'}] },
+      { key:'houdini', name:'Houdini',        teatro:'Madrid · por confirmar',       precio:null,           tickets:'#', soon:true, reparto:[] },
     ]
+
+    function nextFunctionDays(key) {
+      const today = new Date(); today.setHours(0,0,0,0)
+      for (let offset = 0; offset <= 60; offset++) {
+        const d = new Date(today); d.setDate(today.getDate() + offset)
+        const evs = generateEvents(d.getFullYear(), d.getMonth())
+        const found = evs.find(e => e.musical === key && e.date.y === d.getFullYear() && e.date.m === d.getMonth() && e.date.d === d.getDate())
+        if (found) return offset
+      }
+      return null
+    }
 
     function renderCartelera() {
       const grid = document.getElementById('cartelera-grid')
       grid.innerHTML = CARTELERA.map((show, i) => {
         const m = MUSICALS[show.key]
         const poster = POSTERS[show.key]
+        const days = show.soon ? null : nextFunctionDays(show.key)
+        const countdownEl = days === null ? '' : days === 0
+          ? `<div class="cartelera-countdown" style="color:${m.color}">¡Hoy hay función!</div>`
+          : days === 1
+          ? `<div class="cartelera-countdown" style="color:${m.color}">Próxima función: mañana</div>`
+          : `<div class="cartelera-countdown" style="color:${m.color}">Próxima función: en ${days} días</div>`
         const imgEl = poster
           ? `<img class="cartelera-poster" src="${poster}" alt="${show.name}" loading="lazy">`
           : `<div class="cartelera-poster-placeholder" style="background:${m.light}">🎭</div>`
@@ -1092,8 +1212,29 @@
           ${imgEl}
           <div class="cartelera-info">
             <span class="cartelera-tag" style="background:${m.light};color:${m.color}">${m.name}</span>
-            <div class="cartelera-title">${show.name}</div>
             <div class="cartelera-teatro">${show.teatro}</div>
+            ${show.precio ? `<div class="cartelera-precio" style="color:${m.color}">${show.precio}</div>` : ''}
+            ${show.reparto && show.reparto.length ? `
+            <div class="cartelera-reparto">
+              <button class="reparto-toggle" onclick="event.stopPropagation(); this.closest('.cartelera-reparto').classList.toggle('open')" style="color:${m.color}">
+                Reparto <span class="reparto-arrow">▾</span>
+              </button>
+              <ul class="reparto-list">
+                ${show.reparto.map(r => `<li><span class="reparto-rol">${r.rol}</span><span class="reparto-actor">${r.actor}</span></li>`).join('')}
+              </ul>
+            </div>` : ''}
+            ${countdownEl}
+            ${(m.telegram || m.discord) ? `
+            <div class="cartelera-comunidad">
+              ${m.telegram ? `<a class="comunidad-link" href="${m.telegram}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="Telegram">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 13.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
+                Telegram
+              </a>` : ''}
+              ${m.discord ? `<a class="comunidad-link" href="${m.discord}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" title="Discord">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+                Discord
+              </a>` : ''}
+            </div>` : ''}
             ${cta}
           </div>
         </article>`
@@ -1120,7 +1261,35 @@
     }
 
     // ── INIT ─────────────────────────────────────────────────────────────────
+    // ── PRÓXIMAMENTE ─────────────────────────────────────────────────────────
+    const PROXIMAMENTE = [
+      { emoji:'🎩', name:'Houdini',  color:'#d97706', light:'#fef3c7',
+        status:'Confirmado', statusBg:'#fef3c7', statusColor:'#d97706',
+        desc:'Teatro y fecha por confirmar. Madrid, 2026.' },
+      { emoji:'🕯️', name:'Rent',    color:'#dc2626', light:'#fee2e2',
+        status:'Sin confirmar', statusBg:'#f1f5f9', statusColor:'#64748b',
+        desc:'Rumores de gira por España. Sin fecha oficial.' },
+      { emoji:'👑', name:'Six',     color:'#7c3aed', light:'#ede9fe',
+        status:'Sin confirmar', statusBg:'#f1f5f9', statusColor:'#64748b',
+        desc:'Muy esperado por la comunidad fan. Sin anuncio oficial.' },
+    ]
+
+    function renderProximamente() {
+      const grid = document.getElementById('proximamente-grid')
+      grid.innerHTML = PROXIMAMENTE.map((show, i) => `
+        <div class="prox-card fu" style="animation-delay:${i*.08}s">
+          <div class="prox-icon" style="background:${show.light}">${show.emoji}</div>
+          <div class="prox-info">
+            <div class="prox-name">${show.name}</div>
+            <span class="prox-status" style="background:${show.statusBg};color:${show.statusColor}">${show.status}</span>
+            <div class="prox-desc">${show.desc}</div>
+          </div>
+          <a class="prox-notify" href="#sugerencias">Avísame</a>
+        </div>`).join('')
+    }
+
     renderCartelera()
+    renderProximamente()
     loadNews()
     initCalendar()
   </script>
