@@ -293,7 +293,14 @@
     .reparto-member {
       display: flex; flex-direction: column; align-items: center;
       gap: 0.25rem; width: 62px; flex-shrink: 0;
+      text-decoration: none; color: inherit;
     }
+    .reparto-member[href]:hover .reparto-photo,
+    .reparto-member[href]:hover .reparto-photo-placeholder {
+      border-color: currentColor; opacity: 0.85;
+      transform: scale(1.06); transition: transform .15s, opacity .15s;
+    }
+    .reparto-member[href] { cursor: pointer; }
     .reparto-photo {
       width: 52px; height: 52px; border-radius: 50%;
       object-fit: cover; object-position: top center;
@@ -1582,12 +1589,12 @@
               <div class="reparto-scroll">
                 <div class="reparto-grid">
                   ${show.reparto.map(r => `
-                  <div class="reparto-member" title="${r.actor} · ${r.rol}">
+                  <${r.link ? `a href="${r.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()"` : 'div'} class="reparto-member" title="${r.actor} · ${r.rol}${r.link ? ' · Ver perfil' : ''}">
                     ${r.foto ? `<img class="reparto-photo" src="${r.foto}" alt="${r.actor}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
                     <div class="reparto-photo-placeholder" ${r.foto ? 'style="display:none"' : ''}>🎭</div>
                     <span class="reparto-member-name">${r.actor}</span>
                     <span class="reparto-member-rol">${r.rol}</span>
-                  </div>`).join('')}
+                  </${r.link ? 'a' : 'div'}>`).join('')}
                 </div>
               </div>
             </div>` : ''}
