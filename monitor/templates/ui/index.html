@@ -1448,6 +1448,13 @@
 
     loadPlans()
 
+    function toggleReparto(btn) {
+      const thisReparto = btn.closest('.cartelera-reparto')
+      const isOpen = thisReparto.classList.contains('open')
+      document.querySelectorAll('.cartelera-reparto').forEach(r => r.classList.remove('open'))
+      if (!isOpen) thisReparto.classList.add('open')
+    }
+
     // ── DARK MODE ────────────────────────────────────────────────────────────
     ;(function() {
       const saved = localStorage.getItem('bw_theme')
@@ -1599,7 +1606,7 @@
             ${show.precio ? `<div class="cartelera-precio" style="color:${m.color}">${show.precio}</div>` : ''}
             ${show.reparto && show.reparto.length ? `
             <div class="cartelera-reparto">
-              <button class="reparto-toggle" onclick="event.stopPropagation(); this.closest('.cartelera-reparto').classList.toggle('open')" style="color:${m.color}">
+              <button class="reparto-toggle" onclick="event.stopPropagation(); toggleReparto(this)" style="color:${m.color}">
                 Reparto <span class="reparto-arrow">▾</span>
               </button>
               <div class="reparto-scroll">
