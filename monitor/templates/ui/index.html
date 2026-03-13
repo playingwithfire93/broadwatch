@@ -591,7 +591,10 @@
     }
 
     // Genera funciones de Jueves a Domingo para todos los musicales del mes
+    const _eventsCache = {}
     function generateEvents(year, month) {
+      const cacheKey = `${year}-${month}`
+      if (_eventsCache[cacheKey]) return _eventsCache[cacheKey]
       const events = []
       const daysInMonth = new Date(year, month + 1, 0).getDate()
       const musicalKeys = Object.keys(MUSICALS)
@@ -656,6 +659,7 @@
         }
       }
 
+      _eventsCache[cacheKey] = events
       return events
     }
 

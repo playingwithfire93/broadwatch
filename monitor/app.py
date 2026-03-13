@@ -66,8 +66,8 @@ alerts_data = {
             'https://wickedelmusical.com/elenco',
             'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01',
         ],
-        'sound_path': r"C:\Users\Blanca\Documents\Audacity\good news.wav",
-        'image_path': r"C:\Users\Blanca\Desktop\tticket-monitor\static\fotos\Wicked\WICKED6.jpg"
+        'sound_path': os.environ.get('BROADWATCH_WICKED_SOUND', ''),
+        'image_path': os.environ.get('BROADWATCH_WICKED_IMAGE', ''),
     },
     'les_mis': {
         'urls': [
@@ -75,8 +75,8 @@ alerts_data = {
             'https://miserableselmusical.es/elenco',
             'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01'
         ],
-        'sound_path': r'C:\Users\Blanca\Documents\Audacity\Les Misérables _ Look Down (Full Hugh Jackman Performance) [pBbnvOqVNyM].wav',
-        'image_path': r"C:\Users\Blanca\Desktop\tticket-monitor\static\fotos\los_miserables\LESMIS1.jpg"
+        'sound_path': os.environ.get('BROADWATCH_LESMIS_SOUND', ''),
+        'image_path': os.environ.get('BROADWATCH_LESMIS_IMAGE', ''),
     },
     'tbom': {
         'urls': [
@@ -84,10 +84,9 @@ alerts_data = {
             'https://thebookofmormonelmusical.es/elenco/',
             'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01'
         ],
-        'sound_path': r"C:\Users\Blanca\Desktop\Orlando-The-Book-of-Mormon.wav",
-        'image_path': r"C:\Users\Blanca\Desktop\tticket-monitor\static\fotos\book_of_mormon\BOM5.jpg"
+        'sound_path': os.environ.get('BROADWATCH_TBOM_SOUND', ''),
+        'image_path': os.environ.get('BROADWATCH_TBOM_IMAGE', ''),
     }
-    
 }
 
 client = None
@@ -135,7 +134,7 @@ def get_alert_assets(url):
     for musical, data in alerts_data.items():
         if url in data['urls']:
             return data['sound_path'], data['image_path']
-    return r'C:\Sonidos\default.wav', r'C:\Imagenes\default.webp'
+    return '', ''
 
 
 def send_telegram_alert(url, changes, timestamp, image_path):
@@ -285,22 +284,30 @@ class LogManager:
     def __init__(self, log_dir: Path, max_entries: int = 10):
         self.log_dir = log_dir
         self.max_entries = max_entries
+        self._cache = {}  # key -> list of entries (in-memory, avoids disk reads)
 
     def _path_for(self, key: str) -> Path:
         safe = key.replace('/', '_')
         return self.log_dir / f"{safe}.json"
 
     def load(self, key: str):
+        if key in self._cache:
+            return list(self._cache[key])
         p = self._path_for(key)
         if not p.exists():
+            self._cache[key] = []
             return []
         try:
             with p.open('r', encoding='utf-8') as f:
-                return json.load(f)
+                data = json.load(f)
+                self._cache[key] = data
+                return list(data)
         except Exception:
+            self._cache[key] = []
             return []
 
     def save(self, key: str, entries):
+        self._cache[key] = entries
         p = self._path_for(key)
         try:
             with p.open('w', encoding='utf-8') as f:
@@ -309,9 +316,11 @@ class LogManager:
             print(f"❌ Error saving logs for {key}: {e}")
 
     def add(self, key: str, entry: dict):
-        entries = self.load(key)
+        # Populate cache from disk on first access, then work in memory
+        if key not in self._cache:
+            self.load(key)
+        entries = list(self._cache.get(key, []))
         entries.insert(0, entry)
-        # Trim to max_entries
         entries = entries[: self.max_entries]
         self.save(key, entries)
         # Also update a human-readable text version
@@ -348,17 +357,21 @@ class LogManager:
 
 LOG_MANAGER = LogManager(LOG_DIR, max_entries=MAX_LOG_ENTRIES)
 
+# Precomputed lookup: url -> monitor_key (avoids O(n) scan on every change)
+_url_to_monitor_key = {
+    url: key
+    for key, data in alerts_data.items()
+    for url in data.get('urls', [])
+}
+
 
 def get_monitor_key_for_url(url: str):
-    # Try to find a matching monitor key from alerts_data
-    for key, data in alerts_data.items():
-        if url in data.get('urls', []):
+    if url in _url_to_monitor_key:
+        return _url_to_monitor_key[url]
+    # fallback: domain prefix match
+    for mapped_url, key in _url_to_monitor_key.items():
+        if mapped_url and mapped_url.split('/')[2] in url:
             return key
-    # fallback: try matching by domain prefix
-    for key, data in alerts_data.items():
-        for u in data.get('urls', []):
-            if u and u.split('/')[2] in url:
-                return key
     return None
 
 def find_differences(old_text, new_text):
@@ -368,20 +381,26 @@ def find_differences(old_text, new_text):
 # Fichero donde se persisten los eventos visibles en la web
 EVENTS_FILE = Path(BASE_DIR) / 'events.json'
 MAX_EVENTS = 50
+_events_cache = None  # in-memory cache; None means not yet loaded
 
 
 def load_events():
+    global _events_cache
+    if _events_cache is not None:
+        return list(_events_cache)
     if EVENTS_FILE.exists():
         try:
-            return json.loads(EVENTS_FILE.read_text(encoding='utf-8'))
+            _events_cache = json.loads(EVENTS_FILE.read_text(encoding='utf-8'))
+            return list(_events_cache)
         except Exception:
-            return []
+            pass
+    _events_cache = []
     return []
 
 
 def save_event(monitor_key, url, summary, changes):
     """Guarda un evento legible en events.json para mostrarlo en la web."""
-    events = load_events()
+    global _events_cache
     musical_names = {
         'wicked': 'Wicked', 'les_mis': 'Los Miserables',
         'tbom': 'The Book of Mormon', 'houdini': 'Houdini',
@@ -395,8 +414,10 @@ def save_event(monitor_key, url, summary, changes):
         'url': url,
         'timestamp': datetime.utcnow().isoformat() + 'Z',
     }
+    events = load_events()
     events.insert(0, event)
     events = events[:MAX_EVENTS]
+    _events_cache = events  # update cache before writing to disk
     try:
         EVENTS_FILE.write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding='utf-8')
         print(f"💾 Evento guardado: {event['title']}")
@@ -725,8 +746,9 @@ def api_remove_url():
 @app.route('/api/events', methods=['GET'])
 def api_events():
     real_events = load_events()
-    # Si hay eventos reales del monitor, los devolvemos; si no, usamos los de ejemplo
-    return jsonify(real_events if real_events else SAMPLE_EVENTS)
+    resp = jsonify(real_events if real_events else SAMPLE_EVENTS)
+    resp.headers['Cache-Control'] = 'public, max-age=30'
+    return resp
 
 
 @app.route('/api/events/<event_id>', methods=['GET'])
@@ -734,7 +756,9 @@ def api_event_get(event_id):
     all_events = load_events() or SAMPLE_EVENTS
     for e in all_events:
         if e['id'] == event_id:
-            return jsonify(e)
+            resp = jsonify(e)
+            resp.headers['Cache-Control'] = 'public, max-age=30'
+            return resp
     return jsonify({'error': 'not found'}), 404
 
 
@@ -745,7 +769,9 @@ def api_logs_for_key(monitor_key):
     except Exception:
         n = MAX_LOG_ENTRIES
     logs = LOG_MANAGER.get(monitor_key, n)
-    return jsonify({'ok': True, 'monitor_key': monitor_key, 'logs': logs})
+    resp = jsonify({'ok': True, 'monitor_key': monitor_key, 'logs': logs})
+    resp.headers['Cache-Control'] = 'public, max-age=30'
+    return resp
 
 
 @app.route('/api/logs', methods=['GET'])
@@ -759,7 +785,9 @@ def api_logs_by_url():
     except Exception:
         n = MAX_LOG_ENTRIES
     logs = LOG_MANAGER.get(monitor_key, n)
-    return jsonify({'ok': True, 'monitor_key': monitor_key, 'logs': logs})
+    resp = jsonify({'ok': True, 'monitor_key': monitor_key, 'logs': logs})
+    resp.headers['Cache-Control'] = 'public, max-age=30'
+    return resp
 
 
 @app.route('/api/logs/<monitor_key>/text', methods=['GET'])
@@ -863,43 +891,9 @@ def ui_event(event_id):
 monitor.start()
 
 
-def main():
-    get_banner()
-
-    while True:
-        sys.stdout.write(elapsed_time())
-        sys.stdout.flush()
-
-        for url in URLS:
-            if url in disabled_urls:
-                continue
-
-            content = get_page_content(url)
-            if not content:
-                consecutive_failures[url] += 1
-                continue
-
-            consecutive_failures[url] = 0
-
-            if old_contents[url] and content != old_contents[url]:
-                notify_change(url, old_contents[url], content)
-
-            old_contents[url] = content
-
-        reenable_disabled_urls()
-        time.sleep(CHECK_INTERVAL)
-
-import threading
-
-def run_flask():
-    app.run(host='0.0.0.0', port=int(os.environ.get('BROADWATCH_PORT', 8080)))
-
 if __name__ == '__main__':
-    flask_thread = threading.Thread(target=run_flask, daemon=True)
-    flask_thread.start()
+    port = int(os.environ.get('BROADWATCH_PORT', 8080))
     try:
-        main()
+        app.run(host='0.0.0.0', port=port)
     except KeyboardInterrupt:
         print("\n👋 Script detenido manualmente. ¡Hasta pronto!")
-    except Exception as e:
-        print(f"\n💥 Error crítico: {e}")

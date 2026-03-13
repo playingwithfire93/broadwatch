@@ -1,4 +1,6 @@
-export default function Header() {
+import { memo } from 'react'
+
+function Header() {
   return (
     <header className="header">
       <div className="logo">BroadWatch</div>
@@ -10,3 +12,5 @@ export default function Header() {
     </header>
   )
 }
+
+export default memo(Header)

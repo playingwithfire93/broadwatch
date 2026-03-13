@@ -1,4 +1,6 @@
-export default function EventCard({ event }) {
+import { memo } from 'react'
+
+function EventCard({ event }) {
   const monitorKey = event.monitor_key || event.id
   const logsUrl = `/api/logs/${monitorKey}/text?n=10`
 
@@ -12,3 +14,5 @@ export default function EventCard({ event }) {
     </div>
   )
 }
+
+export default memo(EventCard)

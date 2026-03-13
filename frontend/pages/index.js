@@ -17,9 +17,7 @@ export default function Home() {
         <div className="grid">
           {sampleEvents.map(e => (
             <Link key={e.id} href={`/event/${e.id}`}>
-              <a>
-                <EventCard event={e} />
-              </a>
+              <EventCard event={e} />
             </Link>
           ))}
         </div>
