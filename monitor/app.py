@@ -26,7 +26,7 @@ import os
 from twilio.rest import Client
 import json
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import importlib
 
@@ -54,6 +54,7 @@ RETRY_BACKOFF = {url: 30 for url in URLS}  # Initial retry delay (in seconds)
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN') or os.environ.get('BROADWATCH_TELEGRAM_TOKEN', '')
 CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID') or os.environ.get('BROADWATCH_TELEGRAM_CHAT_ID', '')
 DISCORD_WEBHOOK = os.environ.get('BROADWATCH_DISCORD_WEBHOOK', '')
+DISCORD_WEBHOOK_SUGGESTIONS = os.environ.get('BROADWATCH_DISCORD_SUGGESTIONS', '') or DISCORD_WEBHOOK
 
 # Twilio (recommended: move to env vars)
 account_sid = os.environ.get('BROADWATCH_TWILIO_SID', '')
@@ -274,6 +275,8 @@ def summarize_diff(url, diff_text):
         )
         summary = message.content[0].text.strip().strip('"').strip("'")
         print(f"🤖 Resumen generado: {summary}")
+        
+        
         return summary
     except Exception as e:
         print(f"⚠️ Error llamando a Claude: {e}")
@@ -895,6 +898,109 @@ def ui_event(event_id):
 # `before_first_request` on the `Flask` instance in this environment,
 # so we start the monitor directly.
 monitor.start()
+
+
+SUGGESTIONS_FILE = Path(BASE_DIR) / 'suggestions.json'
+
+def load_suggestions():
+    if SUGGESTIONS_FILE.exists():
+        try:
+            return json.loads(SUGGESTIONS_FILE.read_text(encoding='utf-8'))
+        except Exception:
+            pass
+    return []
+
+def save_suggestion(entry):
+    suggestions = load_suggestions()
+    suggestions.insert(0, entry)
+    try:
+        SUGGESTIONS_FILE.write_text(json.dumps(suggestions, ensure_ascii=False, indent=2), encoding='utf-8')
+    except Exception as e:
+        print(f"❌ Error guardando sugerencia: {e}")
+
+
+def classify_suggestion(message, musical, name):
+    """Usa Haiku para clasificar la sugerencia y generar agradecimiento personalizado."""
+    client = _get_anthropic_client()
+    if not client:
+        return 'general', '¡Gracias por tu sugerencia!'
+    prompt = (
+        "Eres el asistente de BroadWatch, una web de musicales en España.\n"
+        f"Un usuario {'llamado ' + name if name else 'anónimo'} ha enviado esta sugerencia"
+        f"{' sobre ' + musical if musical else ''}:\n\"{message}\"\n\n"
+        "1. Clasifícala en UNA de estas categorías: petición_musical, mejora_web, bug, elenco, precios, calendario, otro\n"
+        "2. Escribe UNA frase de agradecimiento personalizada y cercana (tuteo, tono fan).\n"
+        "Responde SOLO en formato JSON: {\"categoria\": \"...\", \"gracias\": \"...\"}"
+    )
+    try:
+        msg = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=150,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        result = json.loads(msg.content[0].text.strip())
+        return result.get('categoria', 'otro'), result.get('gracias', '¡Gracias por tu sugerencia!')
+    except Exception as e:
+        print(f"⚠️ Error clasificando sugerencia con Haiku: {e}")
+        return 'otro', '¡Gracias por tu sugerencia!'
+
+
+def send_suggestion_to_discord(entry, categoria):
+    if not DISCORD_WEBHOOK_SUGGESTIONS:
+        print("⚠️ Discord suggestions webhook no configurado.")
+        return
+    category_emojis = {
+        'petición_musical': '🎭', 'mejora_web': '💡', 'bug': '🐛',
+        'elenco': '🎤', 'precios': '💰', 'calendario': '📅', 'otro': '📬'
+    }
+    emoji = category_emojis.get(categoria, '📬')
+    musical_str = entry.get('musical') or '—'
+    name_str = entry.get('name') or 'Anónimo'
+    email_str = entry.get('email') or '—'
+    content = (
+        f"{emoji} **Nueva sugerencia — {categoria.replace('_', ' ').title()}**\n"
+        f"👤 **De:** {name_str}  |  ✉️ {email_str}\n"
+        f"🎵 **Musical:** {musical_str}\n"
+        f"💬 **Mensaje:** {entry.get('message', '')}\n"
+        f"🕐 {entry.get('timestamp', '')}"
+    )
+    try:
+        resp = requests.post(DISCORD_WEBHOOK_SUGGESTIONS, json={"content": content}, timeout=10)
+        if resp.status_code in (200, 204):
+            print(f"✅ Sugerencia enviada a Discord ({categoria})")
+        else:
+            print(f"❌ Discord suggestions returned {resp.status_code}: {resp.text}")
+    except Exception as e:
+        print(f"❌ Error enviando sugerencia a Discord: {e}")
+
+
+@app.route('/api/suggestions', methods=['POST'])
+def api_suggestions():
+    data = request.get_json() or {}
+    message = (data.get('message') or '').strip()
+    if not message:
+        return jsonify({'ok': False, 'error': 'mensaje vacío'}), 400
+
+    name    = (data.get('name')    or '').strip()[:80]
+    email   = (data.get('email')   or '').strip()[:120]
+    musical = (data.get('musical') or '').strip()[:50]
+
+    categoria, gracias = classify_suggestion(message, musical, name)
+
+    entry = {
+        'id':        f"sg-{int(datetime.now(timezone.utc).timestamp())}",
+        'name':      name,
+        'email':     email,
+        'musical':   musical,
+        'message':   message[:1000],
+        'categoria': categoria,
+        'timestamp': datetime.now(timezone.utc).isoformat(),
+    }
+    save_suggestion(entry)
+
+    threading.Thread(target=send_suggestion_to_discord, args=(entry, categoria), daemon=True).start()
+
+    return jsonify({'ok': True, 'categoria': categoria, 'gracias': gracias})
 
 
 if __name__ == '__main__':
