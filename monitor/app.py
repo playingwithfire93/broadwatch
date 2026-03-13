@@ -1008,6 +1008,106 @@ def api_suggestions():
     return jsonify({'ok': True, 'categoria': categoria, 'gracias': gracias})
 
 
+# ── BUSCA PLAN ────────────────────────────────────────────────────────────────
+
+COMPANIONS_FILE = Path(BASE_DIR) / 'companions.json'
+
+MUSICAL_NAMES = {
+    'wicked': 'Wicked',
+    'lesmis': 'Los Miserables',
+    'tbom': 'The Book of Mormon',
+    'houdini': 'Houdini',
+}
+
+def load_companions():
+    if COMPANIONS_FILE.exists():
+        try:
+            data = json.loads(COMPANIONS_FILE.read_text(encoding='utf-8'))
+            now = datetime.now(timezone.utc).isoformat()
+            return [c for c in data if c.get('expires', '') > now]
+        except Exception:
+            pass
+    return []
+
+def save_companions(companions):
+    try:
+        COMPANIONS_FILE.write_text(json.dumps(companions, ensure_ascii=False, indent=2), encoding='utf-8')
+    except Exception as e:
+        print(f"❌ Error guardando companions: {e}")
+
+def send_companion_to_discord(entry):
+    if not DISCORD_WEBHOOK_SUGGESTIONS:
+        return
+    musical_name = MUSICAL_NAMES.get(entry.get('musical', ''), entry.get('musical', '—'))
+    contact_icons = {'telegram': '✈️', 'email': '✉️', 'instagram': '📸', 'twitter': '🐦', 'otro': '💬'}
+    icon = contact_icons.get(entry.get('contact_type', 'otro'), '💬')
+    content = (
+        f"🎟️ **Nueva búsqueda de plan — {musical_name}**\n"
+        f"👤 **{entry.get('name') or 'Anónimo'}**  ·  🗓️ {entry.get('date', '—')} a las {entry.get('time', '—')}\n"
+        f"🪑 **Entradas disponibles:** {entry.get('seats', 1)}\n"
+        f"💬 {entry.get('message', '')}\n"
+        f"{icon} **Contacto:** {entry.get('contact', '—')} ({entry.get('contact_type', '')})"
+    )
+    try:
+        requests.post(DISCORD_WEBHOOK_SUGGESTIONS, json={"content": content}, timeout=10)
+    except Exception as e:
+        print(f"❌ Error enviando companion a Discord: {e}")
+
+@app.route('/api/companions', methods=['GET'])
+def api_companions_get():
+    musical = request.args.get('musical', '')
+    companions = load_companions()
+    if musical:
+        companions = [c for c in companions if c.get('musical') == musical]
+    companions.sort(key=lambda c: c.get('date', ''), reverse=False)
+    return jsonify(companions)
+
+@app.route('/api/companions', methods=['POST'])
+def api_companions_post():
+    data = request.get_json() or {}
+    name    = (data.get('name')    or '').strip()[:80]
+    musical = (data.get('musical') or '').strip()[:20]
+    date    = (data.get('date')    or '').strip()[:10]   # YYYY-MM-DD
+    time    = (data.get('time')    or '').strip()[:5]    # HH:MM
+    seats   = max(1, min(10, int(data.get('seats', 1) or 1)))
+    message = (data.get('message') or '').strip()[:500]
+    contact = (data.get('contact') or '').strip()[:100]
+    contact_type = (data.get('contact_type') or 'otro').strip()[:20]
+
+    if not musical or not date or not message or not contact:
+        return jsonify({'ok': False, 'error': 'Faltan campos obligatorios'}), 400
+
+    # La publicación expira 3 horas después de la función
+    try:
+        show_dt = datetime.strptime(f"{date} {time or '23:59'}", "%Y-%m-%d %H:%M")
+        expires = show_dt.replace(tzinfo=timezone.utc) + __import__('datetime').timedelta(hours=3)
+        expires_iso = expires.isoformat()
+    except Exception:
+        return jsonify({'ok': False, 'error': 'Fecha inválida'}), 400
+
+    entry = {
+        'id':           f"cp-{int(datetime.now(timezone.utc).timestamp())}",
+        'name':         name or 'Anónimo',
+        'musical':      musical,
+        'date':         date,
+        'time':         time,
+        'seats':        seats,
+        'message':      message,
+        'contact':      contact,
+        'contact_type': contact_type,
+        'timestamp':    datetime.now(timezone.utc).isoformat(),
+        'expires':      expires_iso,
+    }
+
+    companions = load_companions()
+    companions.insert(0, entry)
+    save_companions(companions)
+
+    threading.Thread(target=send_companion_to_discord, args=(entry,), daemon=True).start()
+
+    return jsonify({'ok': True})
+
+
 if __name__ == '__main__':
     port = int(os.environ.get('BROADWATCH_PORT', 8080))
     try:

@@ -604,6 +604,95 @@
     .suggest-success h3 { font-family:'Fraunces',serif; font-weight:900; font-size:1.2rem; color:var(--ink); }
     .suggest-success p { font-size:0.85rem; color:var(--ink2); }
 
+    /* ── BUSCA PLAN ── */
+    .buscaplan-layout {
+      display: grid; grid-template-columns: 380px 1fr; gap: 2rem; align-items: start;
+      max-width: 1100px; margin: 0 auto;
+    }
+    .buscaplan-form-wrap {
+      background: var(--surface); border-radius: 20px;
+      border: 1.5px solid var(--border); padding: 1.75rem 2rem;
+      box-shadow: var(--shadow); position: sticky; top: 5rem;
+    }
+    .buscaplan-form-wrap h3 {
+      font-family:'Fraunces',serif; font-weight:900; font-size:1.1rem;
+      color:var(--ink); margin-bottom:.25rem;
+    }
+    .buscaplan-form-wrap .bp-desc {
+      font-size:.82rem; color:var(--ink2); margin-bottom:1.25rem; line-height:1.6;
+    }
+    .bp-row { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+    .bp-contact-row { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+    .bp-submit { width:100%; margin-top:.25rem; justify-content:center; }
+    .bp-success { display:none; flex-direction:column; align-items:center; text-align:center; padding:.5rem 0; gap:.4rem; }
+    .bp-success-icon { font-size:2rem; animation: popIn .4s cubic-bezier(.34,1.56,.64,1) both; }
+    .bp-success h3 { font-family:'Fraunces',serif; font-weight:900; font-size:1.1rem; }
+    .bp-success p { font-size:.83rem; color:var(--ink2); }
+
+    .bp-feed-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:1rem; flex-wrap:wrap; gap:.5rem;
+    }
+    .bp-filter-tabs { display:flex; gap:.4rem; flex-wrap:wrap; }
+    .bp-tab {
+      padding:.3rem .75rem; border-radius:20px; font-size:.74rem; font-weight:700;
+      border:1.5px solid var(--border); background:var(--surface); color:var(--ink2);
+      cursor:pointer; transition:background .15s, color .15s, border-color .15s;
+    }
+    .bp-tab.active { background:var(--ink); color:#fff; border-color:var(--ink); }
+    .bp-feed-count { font-size:.78rem; color:var(--ink3); font-weight:600; }
+
+    .bp-cards { display:flex; flex-direction:column; gap:1rem; }
+    .bp-empty {
+      text-align:center; padding:3rem 1rem; color:var(--ink3);
+      font-size:.88rem; font-weight:600;
+    }
+    .bp-card {
+      background:var(--surface); border-radius:16px;
+      border:1.5px solid var(--border); padding:1.25rem 1.4rem;
+      box-shadow:var(--shadow);
+      display:grid; grid-template-columns:auto 1fr auto; gap:.75rem 1rem;
+      align-items:start;
+    }
+    .bp-card-stripe {
+      width:4px; border-radius:4px; align-self:stretch; min-height:40px;
+    }
+    .bp-card-body { min-width:0; }
+    .bp-card-top {
+      display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; margin-bottom:.35rem;
+    }
+    .bp-musical-tag {
+      font-size:.68rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+      padding:.18rem .55rem; border-radius:20px; flex-shrink:0;
+    }
+    .bp-card-name { font-size:.8rem; font-weight:700; color:var(--ink2); }
+    .bp-card-when {
+      font-size:.82rem; font-weight:700; color:var(--ink); margin-bottom:.4rem;
+    }
+    .bp-card-seats {
+      font-size:.75rem; color:var(--ink2); font-weight:600; margin-bottom:.4rem;
+    }
+    .bp-card-msg {
+      font-size:.85rem; color:var(--ink); line-height:1.55;
+    }
+    .bp-contact-btn {
+      flex-shrink:0; align-self:center;
+      padding:.5rem 1rem; border-radius:10px; font-size:.78rem; font-weight:700;
+      background:var(--ink); color:#fff; text-decoration:none;
+      transition:opacity .15s; white-space:nowrap;
+    }
+    .bp-contact-btn:hover { opacity:.8; }
+
+    @media(max-width:860px) {
+      .buscaplan-layout { grid-template-columns:1fr; }
+      .buscaplan-form-wrap { position:static; }
+    }
+    @media(max-width:600px) {
+      .bp-row, .bp-contact-row { grid-template-columns:1fr; }
+      .bp-card { grid-template-columns:4px 1fr; }
+      .bp-contact-btn { grid-column:2; justify-self:start; margin-top:.5rem; }
+    }
+
     /* ── FOOTER ── */
     footer {
       max-width: 1200px; margin: 5rem auto 0;
@@ -666,6 +755,7 @@
         <a href="#novedades" class="nav-link">Novedades</a>
         <a href="#proximamente" class="nav-link">Próximamente</a>
         <a href="#calendario" class="nav-link">Calendario</a>
+        <a href="#buscaplan" class="nav-link">Busca Plan</a>
         <a href="#sugerencias" class="nav-link">Sugerencias</a>
       </div>
       <div class="nav-right">
@@ -770,6 +860,102 @@
       <div class="cal-grid" id="cal-grid">
         <!-- Populated by JS -->
       </div>
+    </div>
+  </section>
+
+  <!-- BUSCA PLAN -->
+  <section class="section" id="buscaplan" style="margin-top:4rem;">
+    <div class="section-hd fu fu1">
+      <h2>Busca Plan</h2>
+      <div class="rule"></div>
+    </div>
+    <p class="fu fu2" style="text-align:center;color:var(--ink2);font-size:.9rem;max-width:560px;margin:0 auto 2rem;">
+      ¿Tienes entradas y no quieres ir solo/a? Publícalo aquí y encuentra a alguien con quien compartir la función 🎭
+    </p>
+    <div class="buscaplan-layout fu fu2">
+
+      <!-- FORM -->
+      <div class="buscaplan-form-wrap">
+        <h3>Publicar plan</h3>
+        <p class="bp-desc">Comparte los detalles y espera a que alguien se apunte</p>
+        <div id="bp-form">
+          <div class="field">
+            <label>Nombre <span class="opt">(opcional)</span></label>
+            <input id="bp-name" type="text" placeholder="Tu nombre…" maxlength="80"/>
+          </div>
+          <div class="field">
+            <label>Musical</label>
+            <select id="bp-musical">
+              <option value="">— Elige un musical —</option>
+              <option value="wicked">Wicked</option>
+              <option value="lesmis">Los Miserables</option>
+              <option value="tbom">The Book of Mormon</option>
+            </select>
+          </div>
+          <div class="bp-row">
+            <div class="field">
+              <label>Fecha de la función</label>
+              <input id="bp-date" type="date"/>
+            </div>
+            <div class="field">
+              <label>Hora</label>
+              <input id="bp-time" type="time" value="20:00"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Entradas disponibles</label>
+            <select id="bp-seats">
+              <option value="1">1 entrada</option>
+              <option value="2">2 entradas</option>
+              <option value="3">3 entradas</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Mensaje</label>
+            <textarea id="bp-message" placeholder="Ej: Tengo una entrada para el sábado 21 y no quiero ir sola 🙈 Me acompañas?" maxlength="500"></textarea>
+          </div>
+          <div class="bp-contact-row">
+            <div class="field">
+              <label>Forma de contacto</label>
+              <select id="bp-contact-type">
+                <option value="telegram">Telegram</option>
+                <option value="instagram">Instagram</option>
+                <option value="email">Email</option>
+                <option value="twitter">Twitter / X</option>
+                <option value="otro">Otro</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Tu contacto</label>
+              <input id="bp-contact" type="text" placeholder="@usuario o email…" maxlength="100"/>
+            </div>
+          </div>
+          <button class="btn btn-dark bp-submit" id="bp-btn" onclick="submitPlan()">Publicar plan →</button>
+        </div>
+        <div class="bp-success" id="bp-success">
+          <div class="bp-success-icon">🎟️</div>
+          <h3>¡Plan publicado!</h3>
+          <p>Ya puede verlo todo el mundo. ¡Espero que encuentres a alguien con quien ir!</p>
+          <button class="btn btn-outline" style="margin-top:.5rem;font-size:.82rem;padding:.5rem 1.2rem;" onclick="resetPlan()">Publicar otro</button>
+        </div>
+      </div>
+
+      <!-- FEED -->
+      <div>
+        <div class="bp-feed-header">
+          <div class="bp-filter-tabs" id="bp-tabs">
+            <button class="bp-tab active" data-filter="" onclick="filterPlans(this, '')">Todos</button>
+            <button class="bp-tab" data-filter="wicked" onclick="filterPlans(this, 'wicked')">Wicked</button>
+            <button class="bp-tab" data-filter="lesmis" onclick="filterPlans(this, 'lesmis')">Les Mis</button>
+            <button class="bp-tab" data-filter="tbom" onclick="filterPlans(this, 'tbom')">Book of Mormon</button>
+          </div>
+          <span class="bp-feed-count" id="bp-count"></span>
+        </div>
+        <div class="bp-cards" id="bp-cards">
+          <div class="bp-empty">Cargando…</div>
+        </div>
+      </div>
+
     </div>
   </section>
 
@@ -1126,6 +1312,124 @@
       document.getElementById('suggest-success').style.display = 'none'
       document.getElementById('suggest-form').style.display = 'block'
     }
+
+    // ── BUSCA PLAN ───────────────────────────────────────────────────────────
+    const MUSICAL_COLORS = {
+      wicked:  { color: '#7c3aed', light: '#ede9fe', name: 'Wicked' },
+      lesmis:  { color: '#dc2626', light: '#fee2e2', name: 'Los Miserables' },
+      tbom:    { color: '#0891b2', light: '#cffafe', name: 'Book of Mormon' },
+      houdini: { color: '#d97706', light: '#fef3c7', name: 'Houdini' },
+    }
+    const CONTACT_ICONS = { telegram:'✈️', email:'✉️', instagram:'📸', twitter:'🐦', otro:'💬' }
+    const CONTACT_PREFIXES = { telegram:'https://t.me/', email:'mailto:', instagram:'https://instagram.com/', twitter:'https://twitter.com/', otro:'' }
+
+    let bpCurrentFilter = ''
+    let bpAllPlans = []
+
+    async function loadPlans() {
+      try {
+        const r = await fetch('/api/companions')
+        bpAllPlans = await r.json()
+      } catch { bpAllPlans = [] }
+      renderPlans()
+    }
+
+    function filterPlans(btn, filter) {
+      bpCurrentFilter = filter
+      document.querySelectorAll('.bp-tab').forEach(t => t.classList.remove('active'))
+      btn.classList.add('active')
+      renderPlans()
+    }
+
+    function renderPlans() {
+      const plans = bpCurrentFilter
+        ? bpAllPlans.filter(p => p.musical === bpCurrentFilter)
+        : bpAllPlans
+      const container = document.getElementById('bp-cards')
+      const countEl   = document.getElementById('bp-count')
+      countEl.textContent = plans.length ? `${plans.length} plan${plans.length > 1 ? 'es' : ''}` : ''
+
+      if (!plans.length) {
+        container.innerHTML = '<div class="bp-empty">Aún no hay planes publicados para este musical.<br>¡Sé el primero! 🎭</div>'
+        return
+      }
+
+      container.innerHTML = plans.map(p => {
+        const m = MUSICAL_COLORS[p.musical] || { color:'#666', light:'#eee', name: p.musical }
+        const icon = CONTACT_ICONS[p.contact_type] || '💬'
+        const prefix = CONTACT_PREFIXES[p.contact_type] || ''
+        const contactHref = p.contact_type === 'email'
+          ? `mailto:${p.contact}`
+          : (p.contact_type === 'otro' ? '#' : `${prefix}${p.contact.replace('@','')}`)
+        const dateStr = p.date
+          ? new Date(p.date + 'T12:00:00').toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long' })
+          : '—'
+        const seatsTxt = p.seats === 1 ? '1 entrada' : `${p.seats} entradas`
+        return `<div class="bp-card">
+          <div class="bp-card-stripe" style="background:${m.color}"></div>
+          <div class="bp-card-body">
+            <div class="bp-card-top">
+              <span class="bp-musical-tag" style="background:${m.light};color:${m.color}">${m.name}</span>
+              <span class="bp-card-name">${p.name || 'Anónimo'}</span>
+            </div>
+            <div class="bp-card-when">🗓️ ${dateStr}${p.time ? ' · ' + p.time : ''}</div>
+            <div class="bp-card-seats">🪑 ${seatsTxt} disponible${p.seats > 1 ? 's' : ''}</div>
+            <div class="bp-card-msg">${p.message}</div>
+          </div>
+          <a class="bp-contact-btn" href="${contactHref}" target="_blank" rel="noopener noreferrer">${icon} Contactar</a>
+        </div>`
+      }).join('')
+    }
+
+    async function submitPlan() {
+      const musical  = document.getElementById('bp-musical').value
+      const date     = document.getElementById('bp-date').value
+      const message  = document.getElementById('bp-message').value.trim()
+      const contact  = document.getElementById('bp-contact').value.trim()
+      if (!musical)  { showToast('Elige un musical 🎭'); return }
+      if (!date)     { showToast('Indica la fecha de la función 📅'); return }
+      if (!message)  { showToast('Escribe un mensaje ✍️'); return }
+      if (!contact)  { showToast('Añade una forma de contacto 💬'); return }
+
+      const btn = document.getElementById('bp-btn')
+      btn.textContent = 'Publicando…'; btn.disabled = true
+
+      const payload = {
+        name:         document.getElementById('bp-name').value.trim(),
+        musical,
+        date,
+        time:         document.getElementById('bp-time').value,
+        seats:        parseInt(document.getElementById('bp-seats').value),
+        message,
+        contact,
+        contact_type: document.getElementById('bp-contact-type').value,
+      }
+      try {
+        const r = await fetch('/api/companions', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
+        if (!r.ok) throw new Error()
+        const newPlan = { ...payload, id: 'local-' + Date.now(), name: payload.name || 'Anónimo' }
+        bpAllPlans.unshift(newPlan)
+        renderPlans()
+        document.getElementById('bp-form').style.display = 'none'
+        document.getElementById('bp-success').style.display = 'flex'
+      } catch {
+        showToast('No se pudo publicar, inténtalo de nuevo 😕')
+      } finally {
+        btn.textContent = 'Publicar plan →'; btn.disabled = false
+      }
+    }
+
+    function resetPlan() {
+      ['bp-name','bp-date','bp-message','bp-contact'].forEach(id => document.getElementById(id).value = '')
+      document.getElementById('bp-musical').value = ''
+      document.getElementById('bp-time').value = '20:00'
+      document.getElementById('bp-seats').value = '1'
+      document.getElementById('bp-contact-type').value = 'telegram'
+      document.getElementById('bp-success').style.display = 'none'
+      document.getElementById('bp-form').style.display = 'block'
+    }
+
+    loadPlans()
 
     // ── DARK MODE ────────────────────────────────────────────────────────────
     ;(function() {
