@@ -737,6 +737,17 @@
     .fu1 { animation-delay:.05s; } .fu2 { animation-delay:.12s; }
     .fu3 { animation-delay:.2s; }  .fu4 { animation-delay:.28s; }
 
+    /* ── BIO TOOLTIP ── */
+    .bio-tooltip {
+      position: fixed; z-index: 9999; pointer-events: none;
+      background: var(--ink); color: #fff;
+      padding: 0.65rem 0.9rem; border-radius: 12px;
+      font-size: 0.76rem; line-height: 1.55; max-width: 220px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+      opacity: 0; transition: opacity .15s;
+    }
+    .bio-tooltip.visible { opacity: 1; }
+
     /* ── TOAST ── */
     .toast {
       position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999;
@@ -1446,6 +1457,35 @@
       document.getElementById('bp-form').style.display = 'block'
     }
 
+    // ── BIO TOOLTIP ──────────────────────────────────────────────────────────
+    ;(function() {
+      const tip = document.createElement('div')
+      tip.className = 'bio-tooltip'
+      document.body.appendChild(tip)
+      let currentTarget = null
+
+      document.addEventListener('mouseover', e => {
+        const el = e.target.closest('[data-bio]')
+        if (!el || el === currentTarget) return
+        currentTarget = el
+        tip.textContent = el.dataset.bio
+        tip.classList.add('visible')
+      })
+      document.addEventListener('mousemove', e => {
+        if (!tip.classList.contains('visible')) return
+        const x = e.clientX + 14
+        const y = e.clientY - tip.offsetHeight - 10
+        tip.style.left = Math.min(x, window.innerWidth - tip.offsetWidth - 8) + 'px'
+        tip.style.top  = Math.max(y, 8) + 'px'
+      })
+      document.addEventListener('mouseout', e => {
+        if (currentTarget && !currentTarget.contains(e.relatedTarget)) {
+          tip.classList.remove('visible')
+          currentTarget = null
+        }
+      })
+    })()
+
     loadPlans()
 
     function toggleReparto(btn) {
@@ -1479,11 +1519,11 @@
       { key:'wicked', name:'Wicked', teatro:'Teatro Nuevo Alcalá, Madrid', precio:'Desde €24,45',
         tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01', soon:false,
         reparto:[
-          {rol:'Elphaba',        actor:'Cristina Picos',     foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Cristina_Picos-1.webp',    link:'https://www.instagram.com/crispicos/'},
-          {rol:'Glinda',         actor:'Cristina Llorente',  foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Cristina_Llorente-3.webp', link:'https://www.instagram.com/cristinallorenteoficial/'},
-          {rol:'Nessarose',      actor:'Lydia Fairén',       foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Lydia_Fairen-2.webp',      link:'https://www.instagram.com/lydiafairen/'},
-          {rol:'Mago de Oz',     actor:'Javier Ibarz',       foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Javier_Ibarz-1.webp',      link:'https://www.instagram.com/javierlibarz/'},
-          {rol:'Fiyero',         actor:'Xabier Nogales',     foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Xavier_Nogales.webp',      link:'https://www.instagram.com/xabi_danel/'},
+          {rol:'Elphaba',        actor:'Cristina Picos',     foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Cristina_Picos-1.webp',    link:'https://www.instagram.com/crispicos/',               bio:'Actriz y músico con formación en flauta y teatro musical. Ha protagonizado Los Pilares de la Tierra, El médico y El tiempo entre costuras.'},
+          {rol:'Glinda',         actor:'Cristina Llorente',  foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Cristina_Llorente-3.webp', link:'https://www.instagram.com/cristinallorenteoficial/', bio:'Formada en Londres y Madrid. Ha actuado en Pretty Woman, Ghost y El Rey León. Premio Broadway World 2020 como mejor actriz protagonista por Ghost.'},
+          {rol:'Nessarose',      actor:'Lydia Fairén',       foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Lydia_Fairen-2.webp',      link:'https://www.instagram.com/lydiafairen/',             bio:'Más de 15 años en el teatro musical. Conocida por Los Miserables, La Familia Addams y su trabajo bajo la dirección de Antonio Banderas en COMPANY. También coach vocal certificada.'},
+          {rol:'Mago de Oz',     actor:'Javier Ibarz',       foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Javier_Ibarz-1.webp',      link:'https://www.instagram.com/javierlibarz/',            bio:'Más de cincuenta producciones teatrales incluyendo Los Miserables y My Fair Lady. También guionista y director.'},
+          {rol:'Fiyero',         actor:'Xabier Nogales',     foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Xavier_Nogales.webp',      link:'https://www.instagram.com/xabi_danel/',              bio:'Formado en danza clásica y moderna en Vitoria y Nueva York. Ha actuado en Cabaret, Kinky Boots y Priscilla Reina del desierto.'},
           {rol:'Mme. Morrible',  actor:'Guadalupe Lancho',   foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Guadalupe_Lancho-1.webp',  link:'https://www.instagram.com/guadalupelancho/'},
           {rol:'Dr. Dillamond',  actor:'Esteban Oliver',     foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Esteban_Oliver.webp',        link:'https://www.instagram.com/estebanoliver/'},
           {rol:'Boq',            actor:'Neizan Martín',      foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Neizan_Martin.webp',         link:'https://www.instagram.com/neizan.martin/'},
@@ -1511,15 +1551,15 @@
       { key:'lesmis', name:'Los Miserables', teatro:'Teatro Apolo, Madrid', precio:'Desde €32',
         tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01', soon:false,
         reparto:[
-          {rol:'Jean Valjean',      actor:'Adrián Salzedo',     foto:'https://miserableselmusical.es/wp-content/uploads/2025/07/adrian_salzedo.webp'},
-          {rol:'Javert',            actor:'Pitu Manubens',      foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/pitu_manubens.webp'},
-          {rol:'Fantine',           actor:'Teresa Ferrer',      foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/TERESA_FERRER-1.webp'},
-          {rol:'Marius',            actor:'Quique Niza',        foto:'https://miserableselmusical.es/wp-content/uploads/2025/07/quique_niza.webp'},
-          {rol:'Éponine',           actor:'Elsa Ruiz Monleón',  foto:'https://miserableselmusical.es/wp-content/uploads/2025/07/elsa_ruiz.webp'},
-          {rol:'Cosette',           actor:'Alèxia Pascual',     foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/ALEXIA_PASCUAL-2.webp'},
-          {rol:'Thénardier',        actor:'Xavi Melero',        foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/xavi_meleroa.webp'},
-          {rol:'Mme. Thénardier',   actor:'Malia Conde',        foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/malia_conde-2.webp'},
-          {rol:'Enjolras',          actor:'Javier Manente',     foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/JAVIER_MANENTE-2.webp'},
+          {rol:'Jean Valjean',      actor:'Adrián Salzedo',     foto:'https://miserableselmusical.es/wp-content/uploads/2025/07/adrian_salzedo.webp',    bio:'Actor, músico, cantante y bailarín. Debutó a los ocho años en La bella y la bestia. Premio Mejor Actor Protagonista en los Musical Theater Awards 2019.'},
+          {rol:'Javert',            actor:'Pitu Manubens',      foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/pitu_manubens.webp',       bio:'Actor multidisciplinar de Terrassa, formado en ESAD Barcelona. Conocido por El rey León (Scar) y The Book of Mormon. Amplia trayectoria en doblaje.'},
+          {rol:'Fantine',           actor:'Teresa Ferrer',      foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/TERESA_FERRER-1.webp',     bio:'Actriz y cantante de Cádiz. Ha actuado en West Side Story, El médico y School of Rock. Premio a Mejor Actriz de Reparto.'},
+          {rol:'Marius',            actor:'Quique Niza',        foto:'https://miserableselmusical.es/wp-content/uploads/2025/07/quique_niza.webp',          bio:'Nacido en 2003 en Madrid. Debutó en Gran Vía a los diez años en Sonrisas y Lágrimas. Ha protagonizado Grease y aparece en la serie Días mejores.'},
+          {rol:'Éponine',           actor:'Elsa Ruiz Monleón',  foto:'https://miserableselmusical.es/wp-content/uploads/2025/07/elsa_ruiz.webp',           bio:'Nacida en 2007 en Madrid. Ha actuado en Evita y Los chicos del coro, y ha hecho doblaje para Disney en Wish.'},
+          {rol:'Cosette',           actor:'Alèxia Pascual',     foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/ALEXIA_PASCUAL-2.webp',    bio:'Actriz y cantante con grado en Artes Dramáticas del Institut del Teatre de Barcelona. Finalista en el concurso de canto Eufòria.'},
+          {rol:'Thénardier',        actor:'Xavi Melero',        foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/xavi_meleroa.webp',        bio:'Actor y cantante de Madrid y Barcelona. Protagonizó We Will Rock You y Hoy no me puedo levantar, ganando el Premio Butaca al Mejor Actor.'},
+          {rol:'Mme. Thénardier',   actor:'Malia Conde',        foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/malia_conde-2.webp',       bio:'Nacida en 1980 en Vallirana. Ha actuado en High School Musical, Sister Act y La Familia Addams, además de varias series de televisión.'},
+          {rol:'Enjolras',          actor:'Javier Manente',     foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/JAVIER_MANENTE-2.webp',    bio:'Actor internacional con experiencia en México, EE.UU., España y Argentina. Licenciado en Artes Escénicas. Premio del Teatro Metropolitano por Anastasia.'},
           {rol:'Jean Prouvaire',    actor:'Iván Clemente',      foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/IVAN_CLEMENTE-1.webp'},
           {rol:'Montparnasse',      actor:'Pedro Estrada',      foto:'https://miserableselmusical.es/wp-content/uploads/2025/07/PEDRO_ESTRADA.webp'},
           {rol:'Combeferre',        actor:'Íñigo Etayo',        foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/inigo_etayo-1.webp'},
@@ -1612,7 +1652,7 @@
               <div class="reparto-scroll">
                 <div class="reparto-grid">
                   ${show.reparto.map(r => `
-                  <${r.link ? `a href="${r.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()"` : 'div'} class="reparto-member" title="${r.actor} · ${r.rol}${r.link ? ' · Ver perfil' : ''}">
+                  <${r.link ? `a href="${r.link}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()"` : 'div'} class="reparto-member" ${r.bio ? `data-bio="${r.bio.replace(/"/g,'&quot;')}"` : ''}>
                     ${r.foto ? `<img class="reparto-photo" src="${r.foto}" alt="${r.actor}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
                     <div class="reparto-photo-placeholder" ${r.foto ? 'style="display:none"' : ''}>🎭</div>
                     <span class="reparto-member-name">${r.actor}</span>
