@@ -823,10 +823,6 @@
         <span class="pill-dot" style="background:var(--tbom)"></span>
         The Book of Mormon
       </a>
-      <a href="#" class="musical-pill pill-houdini">
-        <span class="pill-dot" style="background:var(--houdini)"></span>
-        Houdini
-      </a>
     </div>
   </section>
 
@@ -881,7 +877,6 @@
         <div class="leg-item"><span class="leg-dot" style="background:var(--wicked)"></span>Wicked</div>
         <div class="leg-item"><span class="leg-dot" style="background:var(--lesmis)"></span>Los Miserables</div>
         <div class="leg-item"><span class="leg-dot" style="background:var(--tbom)"></span>Book of Mormon</div>
-        <div class="leg-item"><span class="leg-dot" style="background:var(--houdini)"></span>Houdini</div>
         <div class="leg-item"><span class="leg-dot" style="background:var(--other)"></span>Otros</div>
       </div>
       <div class="cal-grid" id="cal-grid">
@@ -1012,7 +1007,6 @@
             <option value="wicked">Wicked</option>
             <option value="les_mis">Los Miserables</option>
             <option value="tbom">The Book of Mormon</option>
-            <option value="houdini">Houdini</option>
             <option value="otro">Otro musical…</option>
           </select>
         </div>
@@ -1057,14 +1051,12 @@
       wicked:  '/static/ui/posters/wicked.jpg',
       lesmis:  '/static/ui/posters/les-miserables.jpg',
       tbom:    '/static/ui/posters/book_of_mormon.jpg',
-      houdini: '/static/ui/posters/houdini.jpg',
     }
 
     const MUSICALS = {
       wicked:  { name:'Wicked',            color:'#7c3aed', light:'#ede9fe', cls:'ev-wicked',  tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01',  teatro:'Teatro Nuevo Alcalá, Madrid',  telegram:'https://t.me/wickedespana',    discord:null },
       lesmis:  { name:'Los Miserables',    color:'#dc2626', light:'#fee2e2', cls:'ev-lesmis',  tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01',    teatro:'Teatro Apolo, Madrid',         telegram:'https://t.me/losmiserableses', discord:null },
       tbom:    { name:'Book of Mormon',    color:'#0891b2', light:'#cffafe', cls:'ev-tbom',    tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', teatro:'Teatro Rialto, Madrid',  telegram:'https://t.me/bookofmormones',  discord:null },
-      houdini: { name:'Houdini',           color:'#d97706', light:'#fef3c7', cls:'ev-houdini', tickets:'#',                                                                         teatro:'Madrid · por confirmar',       telegram:null,                           discord:null },
     }
 
     // Horario estándar de musicales en Madrid:
@@ -1253,7 +1245,6 @@
       { musical:'wicked',  title:'Nueva incorporación al elenco de Wicked',           body:'El papel de Fiyero tiene nuevo intérprete a partir del próximo mes. La producción lo ha confirmado esta semana.', ts:'Hace 2 días' },
       { musical:'lesmis',  title:'Los Miserables amplía funciones hasta julio',        body:'Ante la alta demanda, el Teatro Nuevo Apolo añade nuevas fechas para que nadie se quede sin verlo.', ts:'Hace 4 días' },
       { musical:'tbom',    title:'The Book of Mormon: entradas disponibles para mayo', body:'Se han liberado nuevas localidades para las funciones de mayo. ¡Corre que vuelan!', ts:'Hace 1 semana' },
-      { musical:'houdini', title:'Houdini anuncia su debut en Madrid',                 body:'El esperado musical sobre el famoso escapista llega a Madrid. Fechas y teatro por confirmar próximamente.', ts:'Hace 2 semanas' },
     ]
 
     function renderNews(data) {
@@ -1345,7 +1336,6 @@
       wicked:  { color: '#7c3aed', light: '#ede9fe', name: 'Wicked' },
       lesmis:  { color: '#dc2626', light: '#fee2e2', name: 'Los Miserables' },
       tbom:    { color: '#0891b2', light: '#cffafe', name: 'Book of Mormon' },
-      houdini: { color: '#d97706', light: '#fef3c7', name: 'Houdini' },
     }
     const CONTACT_ICONS = { telegram:'✈️', email:'✉️', instagram:'📸', twitter:'🐦', otro:'💬' }
     const CONTACT_PREFIXES = { telegram:'https://t.me/', email:'mailto:', instagram:'https://instagram.com/', twitter:'https://twitter.com/', otro:'' }
@@ -1540,7 +1530,6 @@
           {rol:'Elenco',               actor:'Betiza Bismark',       foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2025/05/Betiza-Bismark-min.png'},
         ]
       },
-      { key:'houdini', name:'Houdini', teatro:'Madrid · por confirmar', precio:null, tickets:'#', soon:true, reparto:[] },
     ]
 
     function nextFunctionDays(key) {
