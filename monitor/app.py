@@ -28,6 +28,7 @@ import json
 import threading
 from datetime import datetime
 from pathlib import Path
+import importlib
 
 # List of URLs to monitor
 URLS = [
@@ -226,7 +227,10 @@ async def notify_godot(url):
         await ws.send(f"UPDATE:{url}")
 
 import difflib
-import anthropic
+try:
+    anthropic = importlib.import_module('anthropic')
+except Exception:
+    anthropic = None
 
 old_contents = {url: "" for url in URLS}
 
@@ -236,6 +240,8 @@ _anthropic_client = None
 def _get_anthropic_client():
     global _anthropic_client
     if _anthropic_client is None:
+        if anthropic is None:
+            return None
         api_key = os.environ.get('ANTHROPIC_API_KEY', '')
         if api_key:
             _anthropic_client = anthropic.Anthropic(api_key=api_key)
