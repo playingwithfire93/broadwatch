@@ -282,19 +282,39 @@
     }
     .reparto-arrow { transition: transform .2s; display: inline-block; }
     .cartelera-reparto.open .reparto-arrow { transform: rotate(180deg); }
-    .reparto-list {
-      list-style: none; max-height: 0; overflow: hidden;
-      transition: max-height .25s ease, margin-top .25s;
+    .reparto-scroll {
+      max-height: 0; overflow: hidden;
+      transition: max-height .35s ease, margin-top .25s;
     }
-    .cartelera-reparto.open .reparto-list { max-height: 200px; margin-top: 0.45rem; }
-    .reparto-list li {
-      display: flex; justify-content: space-between; align-items: baseline;
-      font-size: 0.72rem; padding: 0.18rem 0;
-      border-bottom: 1px solid var(--border);
+    .cartelera-reparto.open .reparto-scroll { max-height: 999px; margin-top: 0.65rem; }
+    .reparto-grid {
+      display: flex; gap: 0.65rem; flex-wrap: wrap;
     }
-    .reparto-list li:last-child { border-bottom: none; }
-    .reparto-rol { color: var(--ink3); font-weight: 600; }
-    .reparto-actor { color: var(--ink); font-weight: 700; text-align: right; }
+    .reparto-member {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 0.25rem; width: 62px; flex-shrink: 0;
+    }
+    .reparto-photo {
+      width: 52px; height: 52px; border-radius: 50%;
+      object-fit: cover; object-position: top center;
+      border: 2px solid var(--border); background: var(--surface);
+    }
+    .reparto-photo-placeholder {
+      width: 52px; height: 52px; border-radius: 50%;
+      border: 2px solid var(--border); background: var(--surface);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .reparto-member-name {
+      font-size: 0.6rem; font-weight: 700; color: var(--ink);
+      text-align: center; line-height: 1.25; width: 100%;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .reparto-member-rol {
+      font-size: 0.57rem; color: var(--ink3); font-weight: 600;
+      text-align: center; line-height: 1.2; width: 100%;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
     .cartelera-comunidad {
       display: flex; gap: 0.5rem; flex-wrap: wrap;
     }
@@ -1452,13 +1472,68 @@
 
     // ── EN CARTELERA ─────────────────────────────────────────────────────────
     const CARTELERA = [
-      { key:'wicked',  name:'Wicked',         teatro:'Teatro Nuevo Alcalá, Madrid', precio:'Desde €24,45', tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01',  soon:false,
-        reparto:[{rol:'Elphaba',actor:'Cristina Picos'},{rol:'Glinda',actor:'Cristina Llorente'},{rol:'Fiyero',actor:'Xabier Nogales'}] },
-      { key:'lesmis',  name:'Los Miserables', teatro:'Teatro Apolo, Madrid',         precio:'Desde €32',    tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01', soon:false,
-        reparto:[{rol:'Jean Valjean',actor:'Adrián Salzedo'},{rol:'Javert',actor:'Pitu Manubens'},{rol:'Fantine',actor:'Teresa Ferrer'}] },
-      { key:'tbom',    name:'Book of Mormon', teatro:'Teatro Rialto, Madrid',        precio:'Desde €25,50', tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', soon:false,
-        reparto:[{rol:'Elder Price',actor:'Alexandre Ars'},{rol:'Elder Cunningham',actor:'Alejandro Mesa'},{rol:'Nabulungi',actor:'Aisha Fay'}] },
-      { key:'houdini', name:'Houdini',        teatro:'Madrid · por confirmar',       precio:null,           tickets:'#', soon:true, reparto:[] },
+      { key:'wicked', name:'Wicked', teatro:'Teatro Nuevo Alcalá, Madrid', precio:'Desde €24,45',
+        tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01', soon:false,
+        reparto:[
+          {rol:'Elphaba',           actor:'Cristina Picos',    foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Cristina_Picos-1.webp'},
+          {rol:'Glinda',            actor:'Cristina Llorente', foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Cristina_Llorente-3.webp'},
+          {rol:'Fiyero',            actor:'Xabier Nogales',    foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Xavier_Nogales.webp'},
+          {rol:'Mago de Oz',        actor:'Javier Ibarz',      foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Javier_Ibarz-1.webp'},
+          {rol:'Madame Morrible',   actor:'Guadalupe Lancho',  foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Guadalupe_Lancho-1.webp'},
+          {rol:'Cover Elphaba',     actor:'Lydia Fairén',      foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Lydia_Fairen-2.webp'},
+        ]
+      },
+      { key:'lesmis', name:'Los Miserables', teatro:'Teatro Apolo, Madrid', precio:'Desde €32',
+        tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01', soon:false,
+        reparto:[
+          {rol:'Jean Valjean',      actor:'Adrián Salzedo',     foto:'https://miserableselmusical.es/wp-content/uploads/2025/07/adrian_salzedo.webp'},
+          {rol:'Javert',            actor:'Pitu Manubens',      foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/pitu_manubens.webp'},
+          {rol:'Fantine',           actor:'Teresa Ferrer',      foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/TERESA_FERRER-1.webp'},
+          {rol:'Marius',            actor:'Quique Niza',        foto:'https://miserableselmusical.es/wp-content/uploads/2025/07/quique_niza.webp'},
+          {rol:'Éponine',           actor:'Elsa Ruiz Monleón',  foto:'https://miserableselmusical.es/wp-content/uploads/2025/07/elsa_ruiz.webp'},
+          {rol:'Cosette',           actor:'Alèxia Pascual',     foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/ALEXIA_PASCUAL-2.webp'},
+          {rol:'Thénardier',        actor:'Xavi Melero',        foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/xavi_meleroa.webp'},
+          {rol:'Mme. Thénardier',   actor:'Malia Conde',        foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/malia_conde-2.webp'},
+          {rol:'Enjolras',          actor:'Javier Manente',     foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/JAVIER_MANENTE-2.webp'},
+          {rol:'Jean Prouvaire',    actor:'Iván Clemente',      foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/IVAN_CLEMENTE-1.webp'},
+          {rol:'Montparnasse',      actor:'Pedro Estrada',      foto:'https://miserableselmusical.es/wp-content/uploads/2025/07/PEDRO_ESTRADA.webp'},
+          {rol:'Combeferre',        actor:'Íñigo Etayo',        foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/inigo_etayo-1.webp'},
+          {rol:'Courfeyrac',        actor:'Jay Müller',         foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/JAY_MULLER-1.webp'},
+          {rol:'Grantaire',         actor:'Pablo Raya',         foto:'https://miserableselmusical.es/wp-content/uploads/2025/07/pablo_raya.webp'},
+          {rol:'Feuilly',           actor:'Álvaro Karvac',      foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/alvaro_karvac-3.webp'},
+          {rol:'Joly',              actor:'Pablo Gómez Jones',  foto:'https://miserableselmusical.es/wp-content/uploads/2025/07/pablo_gomez.webp'},
+          {rol:'Lesgles',           actor:'G. Sabariegos',      foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/GUILLERMO_SABARIEGOS-1.webp'},
+          {rol:'Bamatabois/Babet',  actor:'Marc Gómez',         foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/marc_gomez-2.webp'},
+          {rol:'Obispo/Brujon',     actor:'Álvaro Puertas',     foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/alvaro_puertas-3.webp'},
+          {rol:'Alt. Valjean',      actor:'Carlos Solano',      foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/carlos_solano.webp'},
+        ]
+      },
+      { key:'tbom', name:'Book of Mormon', teatro:'Teatro Rialto, Madrid', precio:'Desde €25,50',
+        tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', soon:false,
+        reparto:[
+          {rol:'Elder Price',          actor:'Alexandre Ars',        foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2024/06/Alexandre.webp'},
+          {rol:'Elder Cunningham',     actor:'Alejandro Mesa',       foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2023/05/alejandro-1.webp'},
+          {rol:'Nabulungi',            actor:'Aisha Fay',            foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2023/05/Aisha.webp'},
+          {rol:'Elder McKinley',       actor:'Albert Bolea',         foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2025/07/albert_bolea-1.webp'},
+          {rol:'Mafala',               actor:'Jimmy Roca',           foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2023/05/Jimmy_Roca.webp'},
+          {rol:'Alt. Elder Price',     actor:'Jan Buxaderas',        foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2023/05/Jan-1.webp'},
+          {rol:'Cover Cunningham',     actor:'Jesús González',       foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2025/07/jesus_gonzalez-1.webp'},
+          {rol:'Cover McKinley',       actor:'Bittor Fernández',     foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2025/07/bittor_fernandez-1.webp'},
+          {rol:'Cover Elder Price',    actor:'Nicolás Colomer',      foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2025/07/nicolas_colomer-1.webp'},
+          {rol:'Cover Mafala',         actor:'Kevin Tuku',           foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2023/05/Kevin_Tuku.webp'},
+          {rol:'Cover Mafala',         actor:'Jorge E. Caballero',   foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2023/05/Jorge_Enrique_Caballero.webp'},
+          {rol:'Cover Nabulungi',      actor:'Camino Moreno',        foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2025/04/camino_moreno.webp'},
+          {rol:'Elenco',               actor:'Guillermo Arenas',     foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2025/05/Guillermo_Arenas.png'},
+          {rol:'Elenco',               actor:'Álvaro Siankope',      foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2023/05/Alvaro.webp'},
+          {rol:'Elenco',               actor:'Juan A. Plazas',       foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2025/07/juan_antonio_plazas-1.webp'},
+          {rol:'Elenco',               actor:'Beatriz Santana',      foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2023/05/Beatriz_Santana.webp'},
+          {rol:'Elenco',               actor:'Stella Kablan',        foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2024/04/stella_kablan_int.webp'},
+          {rol:'Elenco',               actor:'Armando Valenzuela',   foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2025/10/Armando_Valenzuela.webp'},
+          {rol:'Elenco',               actor:'Ricardo Nkosi',        foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2025/07/Ricardo_Nkosi-1.webp'},
+          {rol:'Elenco',               actor:'Betiza Bismark',       foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2025/05/Betiza-Bismark-min.png'},
+        ]
+      },
+      { key:'houdini', name:'Houdini', teatro:'Madrid · por confirmar', precio:null, tickets:'#', soon:true, reparto:[] },
     ]
 
     function nextFunctionDays(key) {
@@ -1504,9 +1579,17 @@
               <button class="reparto-toggle" onclick="event.stopPropagation(); this.closest('.cartelera-reparto').classList.toggle('open')" style="color:${m.color}">
                 Reparto <span class="reparto-arrow">▾</span>
               </button>
-              <ul class="reparto-list">
-                ${show.reparto.map(r => `<li><span class="reparto-rol">${r.rol}</span><span class="reparto-actor">${r.actor}</span></li>`).join('')}
-              </ul>
+              <div class="reparto-scroll">
+                <div class="reparto-grid">
+                  ${show.reparto.map(r => `
+                  <div class="reparto-member" title="${r.actor} · ${r.rol}">
+                    ${r.foto ? `<img class="reparto-photo" src="${r.foto}" alt="${r.actor}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''}
+                    <div class="reparto-photo-placeholder" ${r.foto ? 'style="display:none"' : ''}>🎭</div>
+                    <span class="reparto-member-name">${r.actor}</span>
+                    <span class="reparto-member-rol">${r.rol}</span>
+                  </div>`).join('')}
+                </div>
+              </div>
             </div>` : ''}
             ${countdownEl}
             ${(m.telegram || m.discord) ? `
