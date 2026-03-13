@@ -1,10 +1,10 @@
 flask
+waitress
+anthropic>=0.25.0
 requests
 beautifulsoup4
 plyer
 python-telegram-bot
 websockets
-twilio
-pywhatkit
 urllib3
 lxml

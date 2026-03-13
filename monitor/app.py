@@ -44,7 +44,7 @@ URLS = [
 ]
 
 
-CHECK_INTERVAL = int(os.environ.get('BROADWATCH_CHECK_INTERVAL', 5))  # Seconds between checks
+CHECK_INTERVAL = int(os.environ.get('BROADWATCH_CHECK_INTERVAL', 60))  # Seconds between checks (60s por defecto para no ser bloqueada)
 MAX_CONSECUTIVE_FAILURES = 5  # Attempts before disabling temporarily
 RETRY_BACKOFF = {url: 30 for url in URLS}  # Initial retry delay (in seconds)
 
@@ -109,14 +109,25 @@ def create_session():
     """Create a requests session with retry strategy."""
     retry_strategy = Retry(
         total=3,
-        backoff_factor=1,
-        status_forcelist=[500, 502, 503, 504],
-        allowed_methods=["GET"]
+        backoff_factor=2,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["GET"],
+        respect_retry_after_header=True,
     )
     adapter = requests.adapters.HTTPAdapter(max_retries=retry_strategy)
     session = requests.Session()
     session.mount("https://", adapter)
     session.mount("http://", adapter)
+    # Sin User-Agent las webs de tickets nos bloquean como bot
+    session.headers.update({
+        'User-Agent': (
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+            'AppleWebKit/537.36 (KHTML, like Gecko) '
+            'Chrome/124.0.0.0 Safari/537.36'
+        ),
+        'Accept-Language': 'es-ES,es;q=0.9',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    })
     return session
 
 SESSION = create_session()
@@ -170,10 +181,10 @@ except Exception as e:
     print("pywhatkit import failed (continuando para debug):", e)
     kit = None
 
-whatsapp_numbers = [
-    os.environ.get('BROADWATCH_WHATSAPP_1', '+34602502302'),
-    os.environ.get('BROADWATCH_WHATSAPP_2', '+34619354263'),
-]
+whatsapp_numbers = [n for n in [
+    os.environ.get('BROADWATCH_WHATSAPP_1', ''),
+    os.environ.get('BROADWATCH_WHATSAPP_2', ''),
+] if n]  # Solo incluye números que estén configurados como variables de entorno
 
 def send_whatsapp_alert(phone_number, url, changes):
     _, image_path = get_alert_assets(url)
@@ -217,8 +228,52 @@ async def notify_godot(url):
         await ws.send(f"UPDATE:{url}")
 
 import difflib
+import anthropic
 
 old_contents = {url: "" for url in URLS}
+
+# ── Claude summarizer ─────────────────────────────────────────────────────────
+_anthropic_client = None
+
+def _get_anthropic_client():
+    global _anthropic_client
+    if _anthropic_client is None:
+        api_key = os.environ.get('ANTHROPIC_API_KEY', '')
+        if api_key:
+            _anthropic_client = anthropic.Anthropic(api_key=api_key)
+    return _anthropic_client
+
+
+def summarize_diff(url, diff_text):
+    """Llama a Claude para resumir un diff en lenguaje humano en español."""
+    client = _get_anthropic_client()
+    if not client:
+        print("⚠️ ANTHROPIC_API_KEY no configurada — usando resumen genérico")
+        return None
+
+    truncated = diff_text[:3000] if len(diff_text) > 3000 else diff_text
+    prompt = (
+        "Eres el asistente de una web de seguimiento de musicales en España.\n"
+        f"Se ha detectado un cambio en: {url}\n\n"
+        f"Diff detectado:\n{truncated}\n\n"
+        "Resume en UNA sola frase en español, clara y para fans de musicales, qué ha cambiado.\n"
+        "Ejemplos: \'Se han actualizado los precios de Wicked\' / "
+        "\'Nueva fecha para Los Miserables en abril\' / "
+        "\'Cambio en el elenco de The Book of Mormon\'\n"
+        "Responde SOLO con la frase, sin puntos ni comillas."
+    )
+    try:
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=120,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        summary = message.content[0].text.strip().strip('"').strip("'")
+        print(f"🤖 Resumen generado: {summary}")
+        return summary
+    except Exception as e:
+        print(f"⚠️ Error llamando a Claude: {e}")
+        return None
 
 # Logs directory and manager
 BASE_DIR = os.path.dirname(__file__)
@@ -311,63 +366,112 @@ def find_differences(old_text, new_text):
     diff = difflib.unified_diff(old_text.splitlines(), new_text.splitlines(), lineterm="")
     return "\n".join(diff)
 
+# Fichero donde se persisten los eventos visibles en la web
+EVENTS_FILE = Path(BASE_DIR) / 'events.json'
+MAX_EVENTS = 50
+
+
+def load_events():
+    if EVENTS_FILE.exists():
+        try:
+            return json.loads(EVENTS_FILE.read_text(encoding='utf-8'))
+        except Exception:
+            return []
+    return []
+
+
+def save_event(monitor_key, url, summary, changes):
+    """Guarda un evento legible en events.json para mostrarlo en la web."""
+    events = load_events()
+    musical_names = {
+        'wicked': 'Wicked', 'les_mis': 'Los Miserables',
+        'tbom': 'The Book of Mormon', 'houdini': 'Houdini',
+    }
+    event = {
+        'id': f"{monitor_key}-{int(datetime.utcnow().timestamp())}",
+        'monitor_key': monitor_key,
+        'musical': musical_names.get(monitor_key, monitor_key.title()),
+        'title': summary or f"Cambio detectado en {musical_names.get(monitor_key, monitor_key.title())}",
+        'summary': summary or "Se ha detectado un cambio en la web oficial.",
+        'url': url,
+        'timestamp': datetime.utcnow().isoformat() + 'Z',
+    }
+    events.insert(0, event)
+    events = events[:MAX_EVENTS]
+    try:
+        EVENTS_FILE.write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding='utf-8')
+        print(f"\u{1f4be} Evento guardado: {event['title']}")
+    except Exception as e:
+        print(f"\u274c Error guardando evento: {e}")
+    return event
+
+
 def notify_change(url, old_text, new_text):
     changes = find_differences(old_text, new_text)
-    short_message = f'The page {url} has changed. Click to check!\nChanges:\n{changes}'
-    max_length = 250
-    if len(short_message) > max_length:
-        short_message = short_message[:max_length] + '...'
 
+    # 1. Pedir resumen legible a Claude
+    summary = summarize_diff(url, changes)
+
+    # 2. Notificacion de escritorio (falla silenciosamente en servidores)
+    short_msg = (summary or f"Cambio en {url}")[:250]
     try:
-        notification.notify(
-            title='🎭 Ticket Update Detected!',
-            message=short_message,
-            timeout=10
-        )
+        notification.notify(title="Novedades BroadWatch", message=short_msg, timeout=10)
     except Exception:
         pass
 
-    print(f"🔔 Notification sent for {url}")
-    print(f"📝 Changes detected:\n{changes}")
-    # Save change into per-musical logs
+    print(f"Cambio detectado en {url}")
+    print(f"Resumen: {summary or '(sin resumen)'}")
+
+    # 3. Guardar en logs tecnicos y en events.json para la web
+    monitor_key = get_monitor_key_for_url(url) or 'general'
     try:
-        monitor_key = get_monitor_key_for_url(url) or 'general'
         entry = {
             'timestamp': datetime.utcnow().isoformat() + 'Z',
             'url': url,
-            'changes': changes
+            'summary': summary or '',
+            'changes': changes,
         }
         LOG_MANAGER.add(monitor_key, entry)
-        print(f"💾 Saved log for {monitor_key}")
     except Exception as e:
-        print(f"❌ Error saving log: {e}")
+        print(f"Error saving log: {e}")
 
+    save_event(monitor_key, url, summary, changes)
+
+    # 4. Alertas externas con el resumen legible
     sound_path, image_path = get_alert_assets(url)
     try:
         winsound.PlaySound(sound_path, winsound.SND_FILENAME | winsound.SND_ASYNC)
     except Exception:
         pass
-    try:
-        webbrowser.open(url)
-    except Exception:
-        pass
 
-    send_telegram_alert(url, changes, time.strftime("%Y-%m-%d %H:%M:%S"), image_path)
+    alert_text = summary or changes
+    send_telegram_alert(url, alert_text, time.strftime("%Y-%m-%d %H:%M:%S"), image_path)
     for number in whatsapp_numbers:
-        send_whatsapp_alert(number, url, changes)
-    send_discord_alert(url, changes, image_path)
+        send_whatsapp_alert(number, url, alert_text)
+    send_discord_alert(url, alert_text, image_path)
 
 
 def get_page_content(url):
     try:
-        response = SESSION.get(url, timeout=15)
+        response = SESSION.get(url, timeout=20)
+
+        # 429 = rate limited: no lo tratamos como contenido vacío, sino como fallo transitorio
+        if response.status_code == 429:
+            retry_after = int(response.headers.get('Retry-After', 60))
+            print(f"⏳ Rate limited por {url} — esperando {retry_after}s")
+            time.sleep(retry_after)
+            return ''
+
         response.raise_for_status()
 
         if not response.text.strip():
             raise ValueError("Empty response content")
 
         soup = BeautifulSoup(response.text, 'html.parser')
-        return soup.get_text()
+        # Eliminar scripts y estilos antes de extraer texto para reducir ruido en el diff
+        for tag in soup(['script', 'style', 'noscript']):
+            tag.decompose()
+        return soup.get_text(separator=' ', strip=True)
 
     except requests.exceptions.RequestException as e:
         print(f"⚠️ Error fetching {url}: {str(e)[:200]}")
@@ -488,7 +592,11 @@ class Monitor:
             'running': self._thread is not None and self._thread.is_alive() and not self._stop_event.is_set(),
             'paused': self._pause_event.is_set(),
             'last_run': self.last_run,
-            'urls_count': len(self.urls)
+            'urls_count': len(self.urls),
+            # Campos que necesita la UI para mostrar el estado por URL
+            'urls': list(self.urls),
+            'consecutive_failures': dict(consecutive_failures),
+            'disabled_urls': list(disabled_urls),
         }
 
     def run(self):
@@ -505,6 +613,9 @@ class Monitor:
                     continue
 
                 content = get_page_content(url)
+                # Pequeña pausa entre URLs para no saturar los servidores
+                time.sleep(2)
+
                 if not content:
                     consecutive_failures[url] = consecutive_failures.get(url, 0) + 1
                     if consecutive_failures[url] >= MAX_CONSECUTIVE_FAILURES:
@@ -611,15 +722,18 @@ def api_remove_url():
     return jsonify({'ok': True})
 
 
-# --- Simple events API used by the lightweight Flask UI ---
+# --- Events API: sirve eventos reales del monitor, con fallback a SAMPLE_EVENTS ---
 @app.route('/api/events', methods=['GET'])
 def api_events():
-    return jsonify(SAMPLE_EVENTS)
+    real_events = load_events()
+    # Si hay eventos reales del monitor, los devolvemos; si no, usamos los de ejemplo
+    return jsonify(real_events if real_events else SAMPLE_EVENTS)
 
 
 @app.route('/api/events/<event_id>', methods=['GET'])
 def api_event_get(event_id):
-    for e in SAMPLE_EVENTS:
+    all_events = load_events() or SAMPLE_EVENTS
+    for e in all_events:
         if e['id'] == event_id:
             return jsonify(e)
     return jsonify({'error': 'not found'}), 404

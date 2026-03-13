@@ -1,504 +1,879 @@
 <!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <meta name="description" content="Alertas y calendario unificado de musicales en España" />
-    <title>BroadWatch — Musical Alerts</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/ui/styles.css">
-  </head>
-  <body>
-    <header class="ui-header" role="banner">
-      <div class="header-left">
-        <div class="logo">BroadWatch</div>
-        <div class="tag">Entérate primero — nosotros vigilamos por ti</div>
-      </div>
-      <div class="header-right">
-        <input id="search" class="search" placeholder="Buscar eventos, artistas, lugares..." aria-label="Buscar eventos" />
-        <div class="status-pill">Estado: <strong id="status-val">Cargando</strong></div>
-      </div>
-    </header>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>BroadWatch — Tu portal de musicales</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,700;1,900&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fafaf8;
+      --ink: #0f0e0c;
+      --ink2: #3a3830;
+      --ink3: #8a8680;
 
-    <main class="ui-container">
-      <section class="hero" aria-hidden="false">
-        <div class="hero-inner" style="background-image: url('/static/fotos/wicked/WICKED1.webp'); background-size:cover; background-position:center">
-          <div class="hero-videos" aria-hidden="true">
-            <!-- Hero videos auto-rotated by the existing rotateHero() script. Use lazy-loading (data-src + poster). -->
-            <video class="hero-video" data-src="/static/ui/videos/VIDEO1.mp4" poster="/static/ui/images/wicked/WICKED1.webp" playsinline muted preload="none"></video>
-            <video class="hero-video" data-src="/static/ui/videos/VIDEO2.mp4" poster="/static/ui/images/wicked/WICKED1.webp" playsinline muted preload="none"></video>
-            <video class="hero-video" data-src="/static/ui/videos/VIDEO3.mp4" poster="/static/ui/images/wicked/WICKED1.webp" playsinline muted preload="none"></video>
-            <video class="hero-video" data-src="/static/ui/videos/VIDEO4.mp4" poster="/static/ui/images/wicked/WICKED1.webp" playsinline muted preload="none"></video>
-            <video class="hero-video" data-src="/static/ui/videos/VIDEO5.webm" poster="/static/ui/images/wicked/WICKED1.webp" playsinline muted preload="none"></video>
-            <video class="hero-video" data-src="/static/ui/videos/VIDEO6.mp4" poster="/static/ui/images/wicked/WICKED1.webp" playsinline muted preload="none"></video>
-            <video class="hero-video" data-src="/static/ui/videos/VIDEO7.mp4" poster="/static/ui/images/wicked/WICKED1.webp" playsinline muted preload="none"></video>
-            <video class="hero-video" data-src="/static/ui/videos/VIDEO8.mp4" poster="/static/ui/images/wicked/WICKED1.webp" playsinline muted preload="none"></video>
+      /* Musical colors */
+      --wicked:  #7c3aed; --wicked-l: #ede9fe;
+      --lesmis:  #dc2626; --lesmis-l: #fee2e2;
+      --tbom:    #0891b2; --tbom-l:   #cffafe;
+      --houdini: #d97706; --houdini-l:#fef3c7;
+      --other:   #059669; --other-l:  #d1fae5;
+
+      --shadow: 0 2px 16px rgba(15,14,12,0.08);
+      --shadow-lg: 0 8px 40px rgba(15,14,12,0.13);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Syne', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 200;
+      background: rgba(250,250,248,0.93);
+      backdrop-filter: blur(12px);
+      border-bottom: 1.5px solid rgba(15,14,12,0.07);
+      padding: 0 2rem;
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto;
+      height: 60px; display: flex; align-items: center; gap: 2rem;
+    }
+    .nav-logo {
+      font-family: 'Fraunces', serif;
+      font-weight: 900; font-size: 1.4rem;
+      color: var(--ink); text-decoration: none;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .nav-logo .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed, #dc2626, #0891b2);
+      animation: spin-hue 4s linear infinite;
+    }
+    @keyframes spin-hue {
+      0%   { filter: hue-rotate(0deg); }
+      100% { filter: hue-rotate(360deg); }
+    }
+    .nav-links { display: flex; gap: 0.2rem; }
+    .nav-link {
+      font-size: 0.82rem; font-weight: 700;
+      color: var(--ink2); text-decoration: none;
+      padding: 0.38rem 0.85rem; border-radius: 999px;
+      transition: background .15s, color .15s;
+      letter-spacing: 0.02em;
+    }
+    .nav-link:hover { background: var(--ink); color: #fff; }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 0.75rem; }
+    .live-badge {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-size: 0.73rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: #dcfce7; color: #166534;
+      border: 1.5px solid #86efac;
+      padding: 0.3rem 0.75rem; border-radius: 999px;
+    }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #16a34a; animation: pulse-g 2s ease infinite; }
+    @keyframes pulse-g { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+
+    /* ── HERO ── */
+    .hero {
+      max-width: 1200px; margin: 0 auto;
+      padding: 4rem 2rem 2rem;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 3rem; align-items: center;
+    }
+    .hero-text {}
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--ink3);
+      border: 1.5px solid rgba(15,14,12,0.12);
+      padding: 0.3rem 0.8rem; border-radius: 999px;
+      margin-bottom: 1.25rem;
+    }
+    .hero-title {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      font-weight: 900; line-height: 1.05;
+      color: var(--ink); margin-bottom: 1.1rem;
+    }
+    .hero-title .line2 { font-style: italic; }
+    .hero-title .accent { position: relative; display: inline-block; }
+    .hero-title .accent::after {
+      content: '';
+      position: absolute; left: 0; bottom: 2px; right: 0;
+      height: 6px; border-radius: 3px;
+      background: linear-gradient(90deg, #7c3aed, #dc2626, #0891b2, #d97706);
+      opacity: 0.35; z-index: -1;
+    }
+    .hero-desc {
+      font-size: 1rem; font-weight: 400; color: var(--ink2);
+      line-height: 1.75; margin-bottom: 2rem; max-width: 460px;
+    }
+    .hero-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.7rem 1.5rem; border-radius: 999px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.88rem; font-weight: 700;
+      text-decoration: none; border: none; cursor: pointer;
+      transition: transform .18s, box-shadow .18s;
+      letter-spacing: 0.02em;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-dark { background: var(--ink); color: #fff; box-shadow: 0 4px 20px rgba(15,14,12,0.2); }
+    .btn-dark:hover { box-shadow: 0 8px 28px rgba(15,14,12,0.3); }
+    .btn-outline { background: transparent; color: var(--ink); border: 2px solid rgba(15,14,12,0.15); }
+    .btn-outline:hover { border-color: var(--ink); background: var(--ink); color: #fff; }
+
+    /* Musical pills in hero */
+    .hero-musicals {
+      display: flex; flex-wrap: wrap; gap: 0.6rem;
+    }
+    .musical-pill {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.55rem 1rem;
+      border-radius: 14px; font-size: 0.82rem; font-weight: 700;
+      cursor: pointer; transition: transform .18s, box-shadow .18s;
+      border: 2px solid transparent;
+      text-decoration: none; color: inherit;
+    }
+    .musical-pill:hover { transform: translateY(-3px) rotate(-1deg); box-shadow: var(--shadow-lg); }
+    .pill-wicked  { background: var(--wicked-l); color: var(--wicked); border-color: rgba(124,58,237,.2); }
+    .pill-lesmis  { background: var(--lesmis-l); color: var(--lesmis); border-color: rgba(220,38,38,.2); }
+    .pill-tbom    { background: var(--tbom-l);   color: var(--tbom);   border-color: rgba(8,145,178,.2); }
+    .pill-houdini { background: var(--houdini-l);color: var(--houdini);border-color: rgba(217,119,6,.2); }
+    .pill-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── NOVEDADES ── */
+    .section {
+      max-width: 1200px; margin: 4rem auto 0;
+      padding: 0 2rem;
+    }
+    .section-hd {
+      display: flex; align-items: baseline; gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .section-hd h2 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.6rem; font-weight: 900;
+      color: var(--ink); white-space: nowrap;
+    }
+    .section-hd .rule {
+      flex: 1; height: 1.5px;
+      background: linear-gradient(90deg, rgba(15,14,12,.12), transparent);
+      border-radius: 999px;
+    }
+    .section-hd .count {
+      font-size: 0.78rem; font-weight: 700; color: var(--ink3);
+    }
+
+    /* News cards */
+    .news-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.25rem;
+    }
+    .news-card {
+      background: #fff; border-radius: 16px;
+      border: 1.5px solid rgba(15,14,12,0.07);
+      padding: 1.25rem; box-shadow: var(--shadow);
+      text-decoration: none; color: inherit;
+      display: flex; flex-direction: column; gap: 0.75rem;
+      transition: transform .2s, box-shadow .2s;
+      position: relative; overflow: hidden;
+    }
+    .news-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+    .news-card-stripe {
+      position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      border-radius: 16px 16px 0 0;
+    }
+    .news-card-top { display: flex; align-items: center; gap: 0.6rem; }
+    .news-musical-tag {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.05em;
+      text-transform: uppercase; padding: 0.22rem 0.6rem;
+      border-radius: 999px;
+    }
+    .news-ts { font-size: 0.72rem; color: var(--ink3); font-weight: 600; margin-left: auto; }
+    .news-title {
+      font-family: 'Fraunces', serif;
+      font-size: 1.05rem; font-weight: 700; color: var(--ink);
+      line-height: 1.3;
+    }
+    .news-body { font-size: 0.83rem; color: var(--ink2); line-height: 1.6; }
+    .news-link {
+      font-size: 0.78rem; font-weight: 700; color: var(--ink3);
+      align-self: flex-start; margin-top: auto;
+      transition: color .15s;
+    }
+    .news-card:hover .news-link { color: var(--ink); }
+
+    /* ── CALENDAR ── */
+    .cal-wrap {
+      background: #fff; border-radius: 20px;
+      border: 1.5px solid rgba(15,14,12,0.07);
+      box-shadow: var(--shadow); overflow: hidden;
+    }
+    .cal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1.5px solid rgba(15,14,12,0.06);
+    }
+    .cal-nav-btn {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: none; border: 1.5px solid rgba(15,14,12,0.1);
+      cursor: pointer; font-size: 1.1rem; color: var(--ink2);
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s, border-color .15s;
+    }
+    .cal-nav-btn:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .cal-month {
+      font-family: 'Fraunces', serif;
+      font-size: 1.2rem; font-weight: 900; color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+    .cal-legend {
+      display: flex; flex-wrap: wrap; gap: 0.6rem;
+      padding: 0.85rem 1.5rem;
+      border-bottom: 1.5px solid rgba(15,14,12,0.06);
+      background: rgba(15,14,12,0.015);
+    }
+    .leg-item {
+      display: flex; align-items: center; gap: 0.35rem;
+      font-size: 0.72rem; font-weight: 700; color: var(--ink2);
+    }
+    .leg-dot { width: 10px; height: 10px; border-radius: 3px; }
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+    }
+    .cal-dow {
+      text-align: center; padding: 0.65rem 0;
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--ink3);
+      border-bottom: 1.5px solid rgba(15,14,12,0.06);
+    }
+    .cal-day {
+      min-height: 90px; padding: 0.5rem;
+      border-right: 1px solid rgba(15,14,12,0.05);
+      border-bottom: 1px solid rgba(15,14,12,0.05);
+      position: relative; vertical-align: top;
+      transition: background .12s;
+    }
+    .cal-day:hover { background: rgba(15,14,12,0.025); }
+    .cal-day.other-month { background: rgba(15,14,12,0.015); }
+    .cal-day.today .day-num {
+      background: var(--ink); color: #fff;
+      border-radius: 8px;
+    }
+    .day-num {
+      font-size: 0.8rem; font-weight: 700; color: var(--ink2);
+      display: inline-block; padding: 0.15rem 0.4rem;
+      border-radius: 6px; margin-bottom: 0.3rem;
+      line-height: 1.4;
+    }
+    .cal-day.other-month .day-num { color: var(--ink3); }
+    .cal-event {
+      display: block; width: 100%; margin-bottom: 2px;
+      font-size: 0.62rem; font-weight: 700;
+      padding: 0.18rem 0.4rem; border-radius: 5px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      cursor: pointer; text-decoration: none; color: inherit;
+      transition: opacity .12s, transform .12s;
+    }
+    .cal-event:hover { opacity: 0.8; transform: scale(1.03); }
+    .ev-wicked  { background: var(--wicked-l); color: var(--wicked); }
+    .ev-lesmis  { background: var(--lesmis-l); color: var(--lesmis); }
+    .ev-tbom    { background: var(--tbom-l);   color: var(--tbom);   }
+    .ev-houdini { background: var(--houdini-l);color: var(--houdini);}
+    .ev-other   { background: var(--other-l);  color: var(--other);  }
+
+    /* ── EVENT TOOLTIP / POPUP ── */
+    .ev-popup {
+      position: fixed; z-index: 500;
+      background: #fff; border-radius: 16px;
+      border: 1.5px solid rgba(15,14,12,0.1);
+      box-shadow: var(--shadow-lg);
+      padding: 1.25rem; width: 280px;
+      pointer-events: none; opacity: 0;
+      transform: translateY(6px) scale(.97);
+      transition: opacity .18s, transform .18s;
+    }
+    .ev-popup.visible { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+    .ev-popup-stripe { height: 4px; border-radius: 4px; margin-bottom: 0.85rem; }
+    .ev-popup-musical { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 0.3rem; }
+    .ev-popup-title { font-family: 'Fraunces', serif; font-size: 1.05rem; font-weight: 900; color: var(--ink); margin-bottom: 0.35rem; }
+    .ev-popup-meta { font-size: 0.78rem; color: var(--ink3); margin-bottom: 0.85rem; font-weight: 600; }
+    .ev-popup-btn {
+      display: block; width: 100%; text-align: center;
+      padding: 0.6rem; border-radius: 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.82rem; font-weight: 700;
+      text-decoration: none; color: #fff;
+      transition: opacity .15s;
+    }
+    .ev-popup-btn:hover { opacity: 0.85; }
+    .ev-popup-close {
+      position: absolute; top: 0.75rem; right: 0.75rem;
+      background: none; border: none; cursor: pointer;
+      font-size: 1rem; color: var(--ink3); line-height: 1;
+      padding: 0.2rem;
+    }
+
+    /* ── SUGGESTIONS ── */
+    .suggest-box {
+      max-width: 640px; margin: 0 auto;
+      background: #fff; border-radius: 20px;
+      border: 1.5px solid rgba(15,14,12,0.07);
+      padding: 2rem 2.25rem; box-shadow: var(--shadow);
+    }
+    .suggest-box p {
+      font-size: 0.9rem; color: var(--ink2); line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+    .field { margin-bottom: 1rem; }
+    .field label {
+      display: block; font-size: 0.74rem; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--ink3); margin-bottom: 0.4rem;
+    }
+    .field label .opt { font-weight: 400; text-transform: none; letter-spacing: 0; font-style: italic; font-size: 0.7rem; }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 0.62rem 0.9rem;
+      border-radius: 10px;
+      border: 1.5px solid rgba(15,14,12,0.1);
+      background: var(--bg);
+      font-family: 'Syne', sans-serif; font-size: 0.88rem;
+      color: var(--ink); outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      border-color: var(--ink); box-shadow: 0 0 0 3px rgba(15,14,12,0.07);
+    }
+    .field input::placeholder, .field textarea::placeholder { color: var(--ink3); }
+    .field textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+    .field select {
+      cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%238a8680' stroke-width='2'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 0.9rem center;
+      padding-right: 2.2rem;
+    }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .suggest-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 1.25rem; flex-wrap: wrap; gap: 0.75rem; }
+    .suggest-note { font-size: 0.72rem; color: var(--ink3); font-weight: 600; }
+    .suggest-success { display: none; flex-direction: column; align-items: center; text-align: center; padding: 1rem 0; gap: 0.5rem; }
+    .suggest-success-icon { font-size: 2.5rem; animation: popIn .4s cubic-bezier(.34,1.56,.64,1) both; }
+    @keyframes popIn { from{transform:scale(0)} to{transform:scale(1)} }
+    .suggest-success h3 { font-family:'Fraunces',serif; font-weight:900; font-size:1.2rem; color:var(--ink); }
+    .suggest-success p { font-size:0.85rem; color:var(--ink2); }
+
+    /* ── FOOTER ── */
+    footer {
+      max-width: 1200px; margin: 5rem auto 0;
+      padding: 2rem 2rem 3rem;
+      border-top: 1.5px solid rgba(15,14,12,0.08);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap;
+    }
+    .footer-logo { font-family:'Fraunces',serif; font-weight:900; font-size:1.1rem; color:var(--ink); }
+    .footer-txt { font-size:0.78rem; font-weight:600; color:var(--ink3); }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+    .fu  { animation: fadeUp .5s ease both; }
+    .fu1 { animation-delay:.05s; } .fu2 { animation-delay:.12s; }
+    .fu3 { animation-delay:.2s; }  .fu4 { animation-delay:.28s; }
+
+    /* ── TOAST ── */
+    .toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 999;
+      background: var(--ink); color: #fff;
+      padding: 0.8rem 1.1rem; border-radius: 12px;
+      font-size: 0.84rem; font-weight: 600;
+      box-shadow: var(--shadow-lg);
+      opacity: 0; transform: translateY(8px);
+      transition: opacity .25s, transform .25s; pointer-events: none;
+    }
+    .toast.visible { opacity:1; transform:translateY(0); }
+
+    /* ── RESPONSIVE ── */
+    @media(max-width: 860px) {
+      .hero { grid-template-columns: 1fr; gap: 2rem; padding-top: 2.5rem; }
+      .cal-day { min-height: 68px; }
+      .field-row { grid-template-columns: 1fr; }
+    }
+    @media(max-width: 600px) {
+      .nav-links { display: none; }
+      .hero-btns { flex-direction: column; }
+      .btn { width: 100%; justify-content: center; }
+      footer { flex-direction: column; text-align: center; }
+      .cal-day { min-height: 52px; padding: 0.3rem; }
+      .day-num { font-size: 0.7rem; }
+      .cal-event { font-size: 0.55rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">
+        <span class="dot"></span>
+        BroadWatch
+      </a>
+      <div class="nav-links">
+        <a href="#novedades" class="nav-link">Novedades</a>
+        <a href="#calendario" class="nav-link">Calendario</a>
+        <a href="#sugerencias" class="nav-link">Sugerencias</a>
+      </div>
+      <div class="nav-right">
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          En directo
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero fu">
+    <div class="hero-text">
+      <div class="hero-tag">🎭 Tu portal de musicales en España</div>
+      <h1 class="hero-title">
+        Sé la primera<br>
+        <span class="line2">en <span class="accent">enterarte</span></span>
+      </h1>
+      <p class="hero-desc">Novedades de elenco, cambios de fecha y disponibilidad de entradas de todos tus musicales favoritos, en un solo lugar.</p>
+      <div class="hero-btns">
+        <a href="#calendario" class="btn btn-dark">Ver el calendario →</a>
+        <a href="#novedades" class="btn btn-outline">Últimas novedades</a>
+      </div>
+    </div>
+    <div class="hero-musicals fu fu2">
+      <a href="https://wickedelmusical.com/" target="_blank" class="musical-pill pill-wicked">
+        <span class="pill-dot" style="background:var(--wicked)"></span>
+        Wicked
+      </a>
+      <a href="https://miserableselmusical.es/" target="_blank" class="musical-pill pill-lesmis">
+        <span class="pill-dot" style="background:var(--lesmis)"></span>
+        Los Miserables
+      </a>
+      <a href="https://thebookofmormonelmusical.es/" target="_blank" class="musical-pill pill-tbom">
+        <span class="pill-dot" style="background:var(--tbom)"></span>
+        The Book of Mormon
+      </a>
+      <a href="#" class="musical-pill pill-houdini">
+        <span class="pill-dot" style="background:var(--houdini)"></span>
+        Houdini
+      </a>
+    </div>
+  </section>
+
+  <!-- NOVEDADES -->
+  <section class="section" id="novedades">
+    <div class="section-hd fu fu1">
+      <h2>Novedades</h2>
+      <div class="rule"></div>
+      <span class="count" id="news-count">—</span>
+    </div>
+    <div class="news-grid" id="news-grid">
+      <!-- Skeleton -->
+      <div class="news-card" style="opacity:.4;min-height:160px;"></div>
+      <div class="news-card" style="opacity:.25;min-height:160px;"></div>
+      <div class="news-card" style="opacity:.12;min-height:160px;"></div>
+    </div>
+  </section>
+
+  <!-- CALENDARIO -->
+  <section class="section" id="calendario" style="margin-top:4rem;">
+    <div class="section-hd fu fu1">
+      <h2>Calendario de funciones</h2>
+      <div class="rule"></div>
+    </div>
+    <div class="cal-wrap fu fu2">
+      <div class="cal-header">
+        <button class="cal-nav-btn" id="cal-prev" aria-label="Mes anterior">&#8592;</button>
+        <span class="cal-month" id="cal-month-label"></span>
+        <button class="cal-nav-btn" id="cal-next" aria-label="Mes siguiente">&#8594;</button>
+      </div>
+      <div class="cal-legend">
+        <div class="leg-item"><span class="leg-dot" style="background:var(--wicked)"></span>Wicked</div>
+        <div class="leg-item"><span class="leg-dot" style="background:var(--lesmis)"></span>Los Miserables</div>
+        <div class="leg-item"><span class="leg-dot" style="background:var(--tbom)"></span>Book of Mormon</div>
+        <div class="leg-item"><span class="leg-dot" style="background:var(--houdini)"></span>Houdini</div>
+        <div class="leg-item"><span class="leg-dot" style="background:var(--other)"></span>Otros</div>
+      </div>
+      <div class="cal-grid" id="cal-grid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- SUGERENCIAS -->
+  <section class="section" id="sugerencias" style="margin-top:4rem;">
+    <div class="section-hd fu fu1">
+      <h2>Buzón de sugerencias</h2>
+      <div class="rule"></div>
+    </div>
+    <div class="suggest-box fu fu2">
+      <p>¿Echas en falta algún musical? ¿Tienes una idea para mejorar la web? Cuéntame, leo todo 👀</p>
+      <div id="suggest-form">
+        <div class="field-row">
+          <div class="field">
+            <label>Nombre <span class="opt">(opcional)</span></label>
+            <input id="sg-name" type="text" placeholder="Tu nombre…" maxlength="80"/>
           </div>
-          <div class="hero-text">
-            <h1>Recibe alertas de tus musicales favoritos</h1>
-            <p>Configura palabras clave y cuentas para que te avisemos cuando haya novedades. Fácil, rápido y en español.</p>
-            <div class="hero-ctas">
-              <a class="cta-btn btn-telegram" href="/ui/settings">Recibir alertas</a>
-              <a class="cta-btn btn-discord" href="/ui/help">Ver cómo funciona</a>
-              <button id="hero-toggle" class="hero-control" aria-pressed="false" aria-label="Pausar reproducción">Pausar</button>
-              <button id="hero-mute" class="hero-mute" aria-pressed="true" aria-label="Activar sonido">
-                <span class="icon" aria-hidden="true">
-                  <!-- speaker icon (muted state shown by CSS/text) -->
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">
-                    <path d="M5 9v6h4l5 5V4L9 9H5z" fill="currentColor" />
-                    <path class="mute-x" d="M16 8l4 4M20 8l-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
-                </span>
-                <span class="mute-text">Activar sonido</span>
-              </button>
-            </div>
+          <div class="field">
+            <label>Email <span class="opt">(opcional)</span></label>
+            <input id="sg-email" type="email" placeholder="tu@email.com" maxlength="120"/>
           </div>
         </div>
-      </section>
-
-      <section id="events" class="grid" aria-live="polite">
-        <div class="small-note">Cargando eventos… Si no ves nada, prueba a ajustar tu búsqueda o vuelve a intentarlo.</div>
-      </section>
-    </main>
-
-    <style>
-      /* Minimal styles for expandable musical cards (local, non-invasive) */
-      .musicals-grid { padding: 1rem 1rem 3rem; }
-      .section-title { font-weight:700; margin: .5rem 0 1rem; }
-      .cards-row { display:flex; flex-wrap:wrap; gap:1rem; }
-      .cards-row .card { width: 260px; box-shadow: 0 6px 18px rgba(0,0,0,0.06); border-radius:10px; overflow:hidden; cursor:pointer; background:#fff; transition:transform .12s ease, box-shadow .12s ease; }
-      .cards-row .card:hover{ transform:translateY(-4px); box-shadow:0 10px 22px rgba(0,0,0,0.08); }
-      .cards-row .card .thumb{ height:120px; background-size:cover; background-position:center; }
-      .cards-row .card .card-body{ padding:0.75rem; }
-      .cards-row .card .card-extra{ max-height:0; overflow:hidden; transition:max-height .28s ease, padding .2s ease; padding:0 .75rem 0; }
-      .cards-row .card.expanded .card-extra{ max-height:400px; padding:.5rem .75rem .75rem; }
-      .cards-row .card .card-actions{ display:flex; gap:.5rem; align-items:center; margin-top:.5rem; }
-      .cards-row .card .card-actions a{ text-decoration:none }
-      /* Ensure internal buttons/links are clickable without toggling card */
-      .cards-row .card a, .cards-row .card button{ pointer-events:auto; }
-    </style>
-
-    <section id="musicals" class="grid musicals-grid" aria-label="Musicales destacados">
-      <h2 class="section-title">Musicales destacados</h2>
-      <div class="cards-row">
-        <article class="musical-card" data-id="wicked">
-          <div class="thumb" data-images="/static/fotos/wicked/WICKED1.webp,/static/fotos/wicked/WICKED2.jpg,/static/fotos/wicked/WICKED3.jpg" style="background-image:url('/static/fotos/wicked/WICKED1.webp')" role="img" aria-label="Wicked">
-            <div class="thumb-placeholder" aria-hidden="true"></div>
-          </div>
-          <div class="card-footer">
-            <div>
-              <div class="title">Wicked</div>
-              <div class="status-bar"><span class="pill">Sin cambios</span></div>
-            </div>
-            <button class="expand-btn" aria-label="Expandir">▾</button>
-          </div>
-        </article>
-
-        <article class="musical-card" data-id="houdini">
-          <div class="thumb" data-images="/static/fotos/Houdini/HOUDINI1.jpg,/static/fotos/Houdini/HOUDINI6.jpg,/static/fotos/Houdini/HOUDINI7.jpg" style="background-image:url('/static/fotos/Houdini/HOUDINI1.jpg')" role="img" aria-label="Houdini">
-            <div class="thumb-placeholder" aria-hidden="true"></div>
-          </div>
-          <div class="card-footer">
-            <div>
-              <div class="title">Houdini</div>
-              <div class="status-bar"><span class="pill">Sin cambios</span></div>
-            </div>
-            <button class="expand-btn" aria-label="Expandir">▾</button>
-          </div>
-        </article>
-
-        <article class="musical-card" data-id="les_mis">
-          <div class="thumb" data-images="/static/fotos/los_miserables/LESMIS1.jpg,/static/fotos/los_miserables/LESMIS2.jpg,/static/fotos/los_miserables/LESMIS3.png" style="background-image:url('/static/fotos/los_miserables/LESMIS1.jpg')" role="img" aria-label="Les Miserables">
-            <div class="thumb-placeholder" aria-hidden="true"></div>
-          </div>
-          <div class="card-footer">
-            <div>
-              <div class="title">Los Miserables</div>
-              <div class="status-bar"><span class="pill">Sin cambios</span></div>
-            </div>
-            <button class="expand-btn" aria-label="Expandir">▾</button>
-          </div>
-        </article>
-
-        <article class="musical-card" data-id="tbom">
-          <div class="thumb" data-images="/static/fotos/book_of_mormon/BOM1.jpg,/static/fotos/book_of_mormon/BOM5.jpg,/static/fotos/book_of_mormon/BOM3.jpg" style="background-image:url('/static/fotos/book_of_mormon/BOM1.jpg')" role="img" aria-label="The Book of Mormon">
-            <div class="thumb-placeholder" aria-hidden="true"></div>
-          </div>
-          <div class="card-footer">
-            <div>
-              <div class="title">The Book of Mormon</div>
-              <div class="status-bar"><span class="pill">Sin cambios</span></div>
-            </div>
-            <button class="expand-btn" aria-label="Expandir">▾</button>
-          </div>
-        </article>
+        <div class="field">
+          <label>Musical al que se refiere <span class="opt">(opcional)</span></label>
+          <select id="sg-musical">
+            <option value="">— Ninguno en concreto —</option>
+            <option value="wicked">Wicked</option>
+            <option value="les_mis">Los Miserables</option>
+            <option value="tbom">The Book of Mormon</option>
+            <option value="houdini">Houdini</option>
+            <option value="otro">Otro musical…</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tu sugerencia</label>
+          <textarea id="sg-message" placeholder="Escribe aquí tu idea, petición o comentario…" maxlength="1000"></textarea>
+        </div>
+        <div class="suggest-actions">
+          <span class="suggest-note">Tus datos solo se usarán para responder si quieres.</span>
+          <button class="btn btn-dark" id="sg-btn" onclick="submitSuggestion()">Enviar sugerencia →</button>
+        </div>
       </div>
+      <div class="suggest-success" id="suggest-success">
+        <div class="suggest-success-icon">🎉</div>
+        <h3>¡Gracias!</h3>
+        <p>Tu sugerencia ha llegado. La leeré con mucho gusto.</p>
+        <button class="btn btn-outline" style="margin-top:.75rem;font-size:.82rem;padding:.5rem 1.2rem;" onclick="resetSuggestion()">Enviar otra</button>
+      </div>
+    </div>
+  </section>
 
-      <div id="musical-details" class="musical-details" aria-live="polite"></div>
+  <footer>
+    <span class="footer-logo">BroadWatch</span>
+    <span class="footer-txt">Musicales en España · siempre al tanto</span>
+  </footer>
 
-      <style>
-        /* Cards - updated visual styling to match reference */
-        .musicals-grid{ padding:2rem 0; display:flex; flex-direction:column; align-items:center; }
-        .musicals-grid .section-title{ font-size:1.25rem; color:#333; margin-bottom:1rem }
+  <div class="toast" id="toast"></div>
 
-        /* center panel for cards */
-        .cards-row{ display:flex; gap:1rem; align-items:flex-start; justify-content:center; flex-wrap:wrap; max-width:1180px; margin:0 auto; padding:1.1rem; background:linear-gradient(180deg,#fff,#fff); border-radius:16px }
+  <!-- Event popup -->
+  <div class="ev-popup" id="ev-popup" role="dialog" aria-modal="true">
+    <button class="ev-popup-close" onclick="closePopup()" aria-label="Cerrar">✕</button>
+    <div class="ev-popup-stripe" id="pp-stripe"></div>
+    <div class="ev-popup-musical" id="pp-musical"></div>
+    <div class="ev-popup-title" id="pp-title"></div>
+    <div class="ev-popup-meta" id="pp-meta"></div>
+    <a class="ev-popup-btn" id="pp-btn" href="#" target="_blank">Comprar entradas →</a>
+  </div>
 
-        /* card */
-        .musical-card{ width:300px; border-radius:12px; overflow:hidden; background:#fff; border:1px solid rgba(226, 69, 146, 0.05); box-shadow:0 12px 28px rgba(230,200,220,0.10); cursor:pointer; transition:transform .14s ease, box-shadow .14s ease }
-        .musical-card:hover{ transform:translateY(-6px); box-shadow:0 20px 40px rgba(230,200,220,0.14) }
-        .musical-card .thumb{ height:140px; background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; background-color:#fff }
-        .musical-card .thumb-placeholder{ width:180px; height:90px; background:#fff; border-radius:10px; box-shadow:0 6px 16px rgba(220,180,200,0.12); }
+  <script>
+    // ── DATA ──────────────────────────────────────────────────────────────────
+    const MUSICALS = {
+      wicked:  { name:'Wicked',            color:'#7c3aed', light:'#ede9fe', cls:'ev-wicked',  tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01',  teatro:'Teatro Coliseum, Madrid' },
+      lesmis:  { name:'Los Miserables',    color:'#dc2626', light:'#fee2e2', cls:'ev-lesmis',  tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01',    teatro:'Teatro Nuevo Apolo, Madrid' },
+      tbom:    { name:'Book of Mormon',    color:'#0891b2', light:'#cffafe', cls:'ev-tbom',    tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', teatro:'Teatro Lope de Vega, Madrid' },
+      houdini: { name:'Houdini',           color:'#d97706', light:'#fef3c7', cls:'ev-houdini', tickets:'#',                                                                         teatro:'Madrid · por confirmar' },
+    }
 
-        .musical-card .card-footer{ display:flex; align-items:center; justify-content:space-between; padding:.75rem .9rem; }
-        .musical-card .title{ font-weight:700; color:#ff4da6; font-size:15px }
+    // Genera funciones de Jueves a Domingo para todos los musicales del mes
+    function generateEvents(year, month) {
+      const events = []
+      const daysInMonth = new Date(year, month + 1, 0).getDate()
+      const musicalKeys = Object.keys(MUSICALS)
 
-        /* expand button: pink circular */
-        .expand-btn{ border:0; background:#fff; border-radius:18px; width:36px; height:36px; box-shadow:0 3px 8px rgba(0,0,0,0.06); cursor:pointer; color:#ff4da6; font-weight:700 }
-        .expand-btn:active{ transform:scale(.98) }
-
-        .musical-card .status-bar{ margin-top:6px }
-        .musical-card .pill{ display:inline-block; background:linear-gradient(90deg,#ffdff0,#ffeaf6); color:#c2185b; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:600 }
-
-        /* Details area (full-width row) */
-        .musical-details{ margin-top:1.25rem; max-width:1180px; margin-left:auto; margin-right:auto }
-        .musical-details .detail{ display:flex; gap:1rem; align-items:flex-start; background:#fff; padding:1rem; border-radius:12px; box-shadow:0 10px 34px rgba(230,200,220,0.10) }
-        .musical-details .detail .detail-thumb{ width:180px; height:120px; background-size:cover; background-position:center; border-radius:8px; background-color:#fff }
-        .musical-details .detail .detail-body{ flex:1 }
-        .musical-details .detail h3{ margin:0 0 .25rem 0; color:#333 }
-        .musical-details .detail p{ margin:0 0 .5rem 0; color:#666 }
-        .musical-details .detail .actions{ display:flex; gap:.5rem; }
-        .musical-details .close-detail{ margin-left:.5rem; border:0; background:transparent; cursor:pointer; color:#999 }
-      </style>
-
-      <script>
-        (function(){
-          const data = {
-            wicked: {
-              title: 'Wicked',
-              img: '/static/fotos/wicked/WICKED1.webp',
-              desc: 'Un viaje musical por las historias que marcaron una generación.',
-              links: [{t:'Sitio',u:'https://wickedelmusical.com/'},{t:'Entradas',u:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01'},{t:'Elenco',u:'https://wickedelmusical.com/elenco'}]
-            },
-            houdini: {
-              title: 'Houdini',
-              img: '/static/fotos/Houdini/HOUDINI1.jpg',
-              desc: 'Información y noticias sobre Houdini. Visita la web oficial para detalles de elenco y venta de entradas.',
-              links: [{t:'Sitio',u:'https://www.houdinielmusical.com'}]
-            },
-            les_mis: {
-              title: 'Les Misérables',
-              img: '/static/fotos/los_miserables/LESMIS1.jpg',
-              desc: 'Clásico musical en una nueva producción. Consulta elenco y fechas desde la web oficial.',
-              links: [{t:'Sitio',u:'https://miserableselmusical.es/'},{t:'Entradas',u:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01'},{t:'Elenco',u:'https://miserableselmusical.es/elenco'}]
-            },
-            tbom: {
-              title: 'The Book of Mormon',
-              img: '/static/fotos/book_of_mormon/BOM1.jpg',
-              desc: 'Comedia musical que ha triunfado internacionalmente. Consulta fechas y compra entradas en la web oficial.',
-              links: [{t:'Sitio',u:'https://thebookofmormonelmusical.es/'},{t:'Entradas',u:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01'},{t:'Elenco',u:'https://thebookofmormonelmusical.es/elenco/'}]
-            }
-          }
-
-          const cards = Array.from(document.querySelectorAll('.musical-card'))
-          const details = document.getElementById('musical-details')
-
-          function renderDetail(info){
-            if(!info) return
-            const linksHtml = info.links.map(l=>`<a class="btn btn-ghost" href="${l.u}" target="_blank" rel="noopener">${l.t}</a>`).join(' ')
-            details.innerHTML = `\n              <div class="detail">\n                <div class="detail-thumb" style="background-image:url('${info.img}')"></div>\n                <div class="detail-body">\n                  <h3>${info.title}</h3>\n                  <p>${info.desc}</p>\n                  <div class="actions">${linksHtml}</div>\n                </div>\n                <div><button class="close-detail" aria-label="Cerrar">✕</button></div>\n              </div>\n            `
-            details.querySelector('.close-detail').addEventListener('click', ()=>{ details.innerHTML = '' })
-            details.scrollIntoView({behavior:'smooth', block:'start'})
-          }
-
-          cards.forEach(card=>{
-            const id = card.dataset.id
-            const btn = card.querySelector('.expand-btn')
-            btn.addEventListener('click', (e)=>{
-              e.stopPropagation()
-              const info = data[id]
-              renderDetail(info)
-            })
-            // clicking the card also expands
-            card.addEventListener('click', ()=>{
-              const info = data[id]
-              renderDetail(info)
-            })
-          })
-
-          // Initialize lightweight thumbnail slideshows for each card
-          document.querySelectorAll('.musical-card .thumb').forEach(thumb => {
-            const imgs = (thumb.dataset.images || '').split(',').map(s => s.trim()).filter(Boolean)
-            if (!imgs.length) return
-            let i = 0
-            let intervalId = null
-            const setBg = (idx) => thumb.style.backgroundImage = `url('${imgs[idx]}')`
-            const placeholder = thumb.querySelector('.thumb-placeholder')
-            const start = () => {
-              if (placeholder) placeholder.style.display = 'none'
-              if (intervalId) return
-              intervalId = setInterval(() => {
-                i = (i + 1) % imgs.length
-                setBg(i)
-              }, 2500)
-            }
-            const stop = () => { if (intervalId) { clearInterval(intervalId); intervalId = null } }
-            // start autoplay, pause on hover
-            setBg(0)
-            start()
-            thumb.addEventListener('mouseenter', stop)
-            thumb.addEventListener('mouseleave', start)
-            // keep reference for potential future cleanup
-            thumb.dataset._slideshowRunning = '1'
-          })
-        })()
-      </script>
-
-    <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
-
-      <script>
-      // Load events and render cards (with skeletons while loading)
-      async function loadEvents(){
-        const container = document.getElementById('events')
-        // render simple skeleton placeholders
-        container.innerHTML = Array.from({length:4}).map(()=>`
-          <article class="card skeleton">
-            <div class="thumb" style="background:linear-gradient(180deg,var(--card),var(--accent-3));"></div>
-            <div class="card-body">
-              <div style="height:16px;width:40%;background:linear-gradient(90deg,var(--card),var(--accent-3));border-radius:6px;margin-bottom:8px"></div>
-              <div style="height:12px;width:70%;background:linear-gradient(90deg,var(--card),var(--accent-3));border-radius:6px;margin-bottom:8px"></div>
-              <div style="height:10px;width:100%;background:linear-gradient(90deg,var(--card),var(--accent-3));border-radius:6px"></div>
-            </div>
-          </article>
-        `).join('')
-
-        try{
-          const res = await fetch('/api/events')
-          const data = await res.json()
-          // remove top cards we don't want (Wicked / Los Miserables)
-          const filtered = (data || []).filter(e => {
-            const t = (e.title || '').toLowerCase()
-            // blacklist by keyword
-            return !(/wicked|miserabl|los miserabl/i.test(t))
-          })
-
-          container.innerHTML = filtered.map(e => {
-            const thumb = e.image || (`/static/ui/images/placeholder.png`)
-            const availability = e.available ? 'Disponible' : 'Agotado'
-            const badgeClass = e.available ? 'badge available' : 'badge sold'
-            const dateShort = (e.date || '').split(' ')[0]
-            return (`
-              <article class="card">
-                <div class="thumb" style="background-image:url('${thumb}')" role="img" aria-label="${e.title}"></div>
-                <div class="card-body">
-                  <div class="card-head">
-                    <h3>${e.title}</h3>
-                    <span class="date-pill">${dateShort}</span>
-                  </div>
-                  <p class="meta">${e.place || ''} — ${e.date || ''}</p>
-                  <p class="summary">${e.summary || ''}</p>
-                  <div class="card-actions">
-                    <button class="btn btn-primary">Recordarme</button>
-                    <button class="btn btn-ghost" onclick="window.location='/ui/event/${e.id}'">Ver</button>
-                    <button class="btn btn-test" onclick="testNotify('${e.id}')">Test Notif</button>
-                    <span class="spacer"></span>
-                    <span class="${badgeClass}">${availability}</span>
-                  </div>
-                </div>
-              </article>
-            `)
-          }).join('')
-        }catch(err){
-          showToast('Error cargando eventos: ' + err, true)
-        }
+      // Asigna cada musical a días distintos para que no se solapen todos
+      const schedule = {
+        wicked:  [4, 5, 6, 0],        // jue, vie, sáb, dom
+        lesmis:  [4, 5, 6, 0],
+        tbom:    [4, 5, 6, 0],
+        houdini: [5, 6],              // solo vie y sáb (próximamente)
       }
-      loadEvents()
 
-      // Trigger a notification via API
-      async function testNotify(eventId){
-        showToast('Enviando test…')
-        console.log('[ui] testNotify ->', eventId)
-        try{
-          const res = await fetch('/api/notify', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({event_id: eventId})})
-          console.log('[ui] /api/notify response', res)
-          if(!res.ok) throw new Error('HTTP ' + res.status)
-          const j = await res.json()
-          console.log('[ui] /api/notify json', j)
-          showToast('Notificación enviada: ' + (j.url || eventId))
-        }catch(err){
-          console.error('[ui] testNotify error', err)
-          showToast('Error al enviar test: ' + err, true)
+      // Para no saturar, cada musical tiene semanas asignadas
+      const weekAssign = { wicked: [0,2], lesmis: [1,3], tbom: [0,1,2,3], houdini: [2,3] }
+
+      const sessions = {
+        wicked:  ['19:30', '22:00'],
+        lesmis:  ['19:30'],
+        tbom:    ['19:30', '21:30'],
+        houdini: ['20:00'],
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(year, month, d)
+        const dow = date.getDay()  // 0=dom, 4=jue, 5=vie, 6=sáb
+        const weekOfMonth = Math.floor((d - 1) / 7)
+
+        for (const key of musicalKeys) {
+          const m = MUSICALS[key]
+          if (!schedule[key].includes(dow)) continue
+          if (!weekAssign[key].includes(weekOfMonth)) continue
+          if (key === 'houdini' && year < 2026) continue // aún no en cartelera
+
+          for (const session of sessions[key]) {
+            events.push({
+              id: `${key}-${year}-${month}-${d}-${session.replace(':','')}`,
+              date: { y: year, m: month, d },
+              musical: key,
+              session,
+              title: m.name,
+              teatro: m.teatro,
+              tickets: m.tickets,
+            })
+          }
         }
       }
 
-      // Live search filter
-      document.getElementById('search').addEventListener('input', (ev) => {
-        const q = ev.target.value.toLowerCase().trim()
-        document.querySelectorAll('#events .card').forEach(card => {
-          const txt = card.innerText.toLowerCase()
-          card.style.display = q ? (txt.includes(q) ? '' : 'none') : ''
-        })
+      // Add real Wicked matinees on Saturdays and Sundays
+      for (let d = 1; d <= daysInMonth; d++) {
+        const date = new Date(year, month, d)
+        const dow = date.getDay()
+        if (dow === 0 || dow === 6) {
+          events.push({
+            id: `wicked-mat-${year}-${month}-${d}`,
+            date: { y: year, m: month, d },
+            musical: 'wicked',
+            session: '17:00',
+            title: 'Wicked (matinée)',
+            teatro: MUSICALS.wicked.teatro,
+            tickets: MUSICALS.wicked.tickets,
+          })
+        }
+      }
+
+      return events
+    }
+
+    // ── CALENDAR ─────────────────────────────────────────────────────────────
+    const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+    const DOWS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']
+
+    let calYear, calMonth
+    const today = new Date()
+
+    function initCalendar() {
+      calYear = today.getFullYear()
+      calMonth = today.getMonth()
+      renderCalendar()
+    }
+
+    function renderCalendar() {
+      document.getElementById('cal-month-label').textContent = `${MONTHS_ES[calMonth]} ${calYear}`
+      const grid = document.getElementById('cal-grid')
+      grid.innerHTML = ''
+
+      // Day-of-week headers (Mon first)
+      DOWS.forEach(d => {
+        const el = document.createElement('div')
+        el.className = 'cal-dow'
+        el.textContent = d
+        grid.appendChild(el)
       })
 
-      // Status poll
-      async function refreshStatus(){
-        try{
-          const r = await fetch('/status')
-          const s = await r.json()
-          document.getElementById('status-val').innerText = s.running ? (s.paused? 'Paused':'Running') : 'Stopped'
-        }catch(e){
-          document.getElementById('status-val').innerText = 'Unavailable'
-        }
-      }
-      setInterval(refreshStatus, 5000)
-      refreshStatus()
+      const firstDay = new Date(calYear, calMonth, 1).getDay() // 0=Sun
+      const startOffset = (firstDay === 0) ? 6 : firstDay - 1  // Mon-first offset
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate()
+      const prevMonthDays = new Date(calYear, calMonth, 0).getDate()
 
-      // Simple toast
-      function showToast(msg, isError){
-        const t = document.getElementById('toast')
-        t.className = 'toast' + (isError ? ' toast-error' : '')
-        t.innerText = msg
-        t.style.opacity = 1
-        setTimeout(()=>{ t.style.opacity = 0 }, 4000)
+      const events = generateEvents(calYear, calMonth)
+
+      // Previous month padding
+      for (let i = startOffset - 1; i >= 0; i--) {
+        const el = createDayCell(prevMonthDays - i, true, [])
+        grid.appendChild(el)
       }
 
-      // Lazy-load hero videos when hero enters viewport or on first user interaction
-      (function lazyLoadHeroVideos(){
-        const hero = document.querySelector('.hero-inner')
-        const vids = Array.from(document.querySelectorAll('.hero-video'))
-        if(!vids.length) return
+      // Current month days
+      for (let d = 1; d <= daysInMonth; d++) {
+        const isToday = d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear()
+        const dayEvents = events.filter(e => e.date.d === d)
+        const el = createDayCell(d, false, dayEvents, isToday)
+        grid.appendChild(el)
+      }
 
-        const loadVideos = () => {
-          vids.forEach(v => {
-            const ds = v.dataset.src
-            if(ds && !v.getAttribute('src')){
-              v.setAttribute('src', ds)
-              v.preload = 'metadata'
-              try{ v.load() }catch(e){}
-            }
-          })
-          window.dispatchEvent(new Event('heroVideosLoaded'))
-          if(obs) obs.disconnect()
-        }
+      // Next month padding
+      const totalCells = startOffset + daysInMonth
+      const remainder = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7)
+      for (let i = 1; i <= remainder; i++) {
+        const el = createDayCell(i, true, [])
+        grid.appendChild(el)
+      }
+    }
 
-        let obs = null
-        if('IntersectionObserver' in window && hero){
-          obs = new IntersectionObserver((entries)=>{
-            entries.forEach(en=>{
-              if(en.isIntersecting) loadVideos()
-            })
-          }, {threshold: 0.1})
-          obs.observe(hero)
-        } else {
-          // fallback: load after a short delay
-          setTimeout(loadVideos, 1000)
-        }
+    function createDayCell(day, otherMonth, events, isToday=false) {
+      const cell = document.createElement('div')
+      cell.className = 'cal-day' + (otherMonth ? ' other-month' : '') + (isToday ? ' today' : '')
 
-        const onUser = () => { loadVideos(); window.removeEventListener('pointerdown', onUser); window.removeEventListener('keydown', onUser) }
-        window.addEventListener('pointerdown', onUser, {once:true})
-        window.addEventListener('keydown', onUser, {once:true})
-      })()
+      const numEl = document.createElement('span')
+      numEl.className = 'day-num'
+      numEl.textContent = day
+      cell.appendChild(numEl)
 
-      // Hero video rotation — starts after heroVideosLoaded event (ensures sources are set)
-      (function rotateHero(){
-        const start = () => {
-          const vids = Array.from(document.querySelectorAll('.hero-video'))
-          const dots = Array.from(document.querySelectorAll('#hero-dots .dot'))
-          if(!vids.length) return
+      // Show up to 3 events, then "+N más"
+      const maxShow = 3
+      events.slice(0, maxShow).forEach(ev => {
+        const a = document.createElement('a')
+        a.className = `cal-event ${MUSICALS[ev.musical].cls}`
+        a.textContent = `${ev.session} ${ev.title}`
+        a.href = '#'
+        a.addEventListener('click', e => { e.preventDefault(); openPopup(ev, a) })
+        cell.appendChild(a)
+      })
+      if (events.length > maxShow) {
+        const more = document.createElement('span')
+        more.style.cssText = 'font-size:.6rem;color:var(--ink3);font-weight:700;padding-left:.2rem;'
+        more.textContent = `+${events.length - maxShow} más`
+        cell.appendChild(more)
+      }
+      return cell
+    }
 
-          // Keep only videos that have a playable type
-          let playable = vids.filter(v => {
-            const src = v.getAttribute('src') || ''
-            if(!src) return false
-            const canMp4 = v.canPlayType && v.canPlayType('video/mp4')
-            const canWebm = v.canPlayType && v.canPlayType('video/webm')
-            return !!(canMp4 || canWebm)
-          })
-          if(!playable.length) return
+    document.getElementById('cal-prev').addEventListener('click', () => {
+      calMonth--; if (calMonth < 0) { calMonth = 11; calYear-- }
+      renderCalendar()
+    })
+    document.getElementById('cal-next').addEventListener('click', () => {
+      calMonth++; if (calMonth > 11) { calMonth = 0; calYear++ }
+      renderCalendar()
+    })
 
-          let i = 0
-          let interval = null
-          let paused = false
+    // ── POPUP ─────────────────────────────────────────────────────────────────
+    function openPopup(ev, anchor) {
+      const m = MUSICALS[ev.musical]
+      const popup = document.getElementById('ev-popup')
+      document.getElementById('pp-stripe').style.background = m.color
+      document.getElementById('pp-musical').textContent = m.name.toUpperCase()
+      document.getElementById('pp-musical').style.color = m.color
+      document.getElementById('pp-title').textContent = ev.title
+      document.getElementById('pp-meta').textContent = `${ev.session} · ${ev.teatro}`
+      const btn = document.getElementById('pp-btn')
+      btn.style.background = m.color
+      btn.href = ev.tickets
+      btn.textContent = ev.tickets === '#' ? 'Próximamente…' : 'Comprar entradas →'
+      btn.style.pointerEvents = ev.tickets === '#' ? 'none' : 'auto'
+      btn.style.opacity = ev.tickets === '#' ? '.5' : '1'
 
-          const setup = () => {
-            playable.forEach((v, idx)=>{
-              v.style.display = idx === i ? 'block' : 'none'
-              if(dots[idx]) dots[idx].classList.toggle('active', idx === i)
-              v.muted = true
-              v.preload = 'metadata'
-              v.addEventListener('error', (ev) => console.warn('[ui] hero video error', v.src, ev))
-            })
-          }
+      // Position near anchor
+      const rect = anchor.getBoundingClientRect()
+      const top = rect.bottom + window.scrollY + 8
+      let left = rect.left + window.scrollX
+      if (left + 290 > window.innerWidth) left = window.innerWidth - 298
+      popup.style.top = top + 'px'
+      popup.style.left = left + 'px'
+      popup.classList.add('visible')
+    }
 
-          const playSafe = async (videoEl) => {
-            try{
-              const p = videoEl.play()
-              if(p && typeof p.then === 'function') await p
-              return true
-            }catch(err){
-              console.warn('[ui] video play failed for', videoEl.src, err)
-              return false
-            }
-          }
+    function closePopup() {
+      document.getElementById('ev-popup').classList.remove('visible')
+    }
 
-          const startRotation = async () => {
-            if(paused) return
-            if(interval) return
-            await playSafe(playable[i])
-            interval = setInterval(async () => {
-              if(playable.length <= 1){ clearInterval(interval); interval = null; return }
-              const current = playable[i]
-              try{ current.pause(); current.currentTime = 0 }catch(e){}
-              i = (i + 1) % playable.length
-              const next = playable[i]
-              playable.forEach((v, idx)=> v.style.display = idx === i ? 'block' : 'none')
-              if(dots.length) dots.forEach((d, idx)=> d.classList.toggle('active', idx === i))
-              const ok = await playSafe(next)
-              if(!ok){ console.warn('[ui] removing failing hero video', next.src); playable.splice(i,1); if(playable.length===0){ clearInterval(interval); interval=null; return } i = i % playable.length }
-            }, 5000)
-          }
+    document.addEventListener('click', e => {
+      const popup = document.getElementById('ev-popup')
+      if (popup.classList.contains('visible') && !popup.contains(e.target) && !e.target.classList.contains('cal-event')) {
+        closePopup()
+      }
+    })
 
-          const stopRotation = () => { if(interval){ clearInterval(interval); interval = null } }
+    // ── NEWS ─────────────────────────────────────────────────────────────────
+    // Sample news — replace with /api/events call in production
+    const SAMPLE_NEWS = [
+      { musical:'wicked',  title:'Nueva incorporación al elenco de Wicked',           body:'El papel de Fiyero tiene nuevo intérprete a partir del próximo mes. La producción lo ha confirmado esta semana.', ts:'Hace 2 días' },
+      { musical:'lesmis',  title:'Los Miserables amplía funciones hasta julio',        body:'Ante la alta demanda, el Teatro Nuevo Apolo añade nuevas fechas para que nadie se quede sin verlo.', ts:'Hace 4 días' },
+      { musical:'tbom',    title:'The Book of Mormon: entradas disponibles para mayo', body:'Se han liberado nuevas localidades para las funciones de mayo. ¡Corre que vuelan!', ts:'Hace 1 semana' },
+      { musical:'houdini', title:'Houdini anuncia su debut en Madrid',                 body:'El esperado musical sobre el famoso escapista llega a Madrid. Fechas y teatro por confirmar próximamente.', ts:'Hace 2 semanas' },
+    ]
 
-          const pauseAll = () => { paused = true; stopRotation(); playable.forEach(v=>{ try{ v.pause() }catch(e){} }) }
-          const resumeAll = async () => { paused = false; await playSafe(playable[i]); startRotation() }
+    function renderNews(data) {
+      const grid = document.getElementById('news-grid')
+      document.getElementById('news-count').textContent = data.length + ' noticias'
+      grid.innerHTML = data.map((n, i) => {
+        const m = MUSICALS[n.musical] || { color:'#059669', light:'#d1fae5', name: n.musical }
+        return `
+        <a class="news-card fu" href="${n.url || '#'}" style="animation-delay:${i*.07}s">
+          <div class="news-card-stripe" style="background:${m.color}"></div>
+          <div class="news-card-top">
+            <span class="news-musical-tag" style="background:${m.light};color:${m.color}">${m.name}</span>
+            <span class="news-ts">${n.ts || ''}</span>
+          </div>
+          <div class="news-title">${n.title}</div>
+          <div class="news-body">${n.body || n.summary || ''}</div>
+          <span class="news-link">Leer más →</span>
+        </a>`
+      }).join('')
+    }
 
-          setup()
-          playSafe(playable[0]).catch(()=>{})
-          startRotation()
+    async function loadNews() {
+      try {
+        const r = await fetch('/api/events')
+        if (!r.ok) throw new Error()
+        const data = await r.json()
+        const events = Array.isArray(data) ? data : (data.events || [])
+        if (events.length) { renderNews(events); return }
+        throw new Error('empty')
+      } catch {
+        renderNews(SAMPLE_NEWS)
+      }
+    }
 
-          window.heroControls = {pause: pauseAll, play: resumeAll, isPaused: () => paused}
+    // ── SUGGESTIONS ──────────────────────────────────────────────────────────
+    function showToast(msg) {
+      const t = document.getElementById('toast')
+      t.textContent = msg
+      t.classList.add('visible')
+      setTimeout(() => t.classList.remove('visible'), 3500)
+    }
 
-          const toggle = document.getElementById('hero-toggle')
-          if(toggle){
-            toggle.addEventListener('click', (ev)=>{
-              const pressed = toggle.getAttribute('aria-pressed') === 'true'
-              if(pressed){ resumeAll(); toggle.setAttribute('aria-pressed','false'); toggle.innerText = 'Pausar' }
-              else { pauseAll(); toggle.setAttribute('aria-pressed','true'); toggle.innerText = 'Reanudar' }
-            })
-          }
+    async function submitSuggestion() {
+      const message = document.getElementById('sg-message').value.trim()
+      if (!message) { showToast('Escribe tu sugerencia antes de enviar ✍️'); document.getElementById('sg-message').focus(); return }
+      const btn = document.getElementById('sg-btn')
+      btn.textContent = 'Enviando…'; btn.disabled = true
+      const payload = {
+        name:    document.getElementById('sg-name').value.trim(),
+        email:   document.getElementById('sg-email').value.trim(),
+        musical: document.getElementById('sg-musical').value,
+        message,
+      }
+      try {
+        const r = await fetch('/api/suggestions', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) })
+        if (!r.ok) throw new Error()
+      } catch {
+        // fallback: save locally
+        const s = JSON.parse(localStorage.getItem('bw_suggestions') || '[]')
+        s.push({ ...payload, ts: new Date().toISOString() })
+        localStorage.setItem('bw_suggestions', JSON.stringify(s))
+      } finally {
+        btn.textContent = 'Enviar sugerencia →'; btn.disabled = false
+        document.getElementById('suggest-form').style.display = 'none'
+        document.getElementById('suggest-success').style.display = 'flex'
+      }
+    }
 
-          const muteBtn = document.getElementById('hero-mute')
-          if(muteBtn){
-            const setMutedState = (isMuted) => {
-              playable.forEach(v => { try{ v.muted = !!isMuted }catch(e){} })
-              muteBtn.setAttribute('aria-pressed', isMuted ? 'true' : 'false')
-              const txt = muteBtn.querySelector('.mute-text')
-              if(txt) txt.innerText = isMuted ? 'Activar sonido' : 'Silenciar'
-              muteBtn.setAttribute('aria-label', isMuted ? 'Activar sonido' : 'Silenciar')
-            }
-            setMutedState(true)
-            muteBtn.addEventListener('click', ()=>{ const currentlyMuted = muteBtn.getAttribute('aria-pressed') === 'true'; setMutedState(!currentlyMuted) })
-          }
-        }
+    function resetSuggestion() {
+      ['sg-name','sg-email','sg-message'].forEach(id => document.getElementById(id).value = '')
+      document.getElementById('sg-musical').value = ''
+      document.getElementById('suggest-success').style.display = 'none'
+      document.getElementById('suggest-form').style.display = 'block'
+    }
 
-        // Start when lazy loader signals readiness
-        if(document.readyState === 'complete'){
-          window.addEventListener('heroVideosLoaded', start, {once:true})
-        } else {
-          window.addEventListener('load', ()=> window.addEventListener('heroVideosLoaded', start, {once:true}))
-        }
-      })()
-    </script>
-  </body>
+    // ── INIT ─────────────────────────────────────────────────────────────────
+    loadNews()
+    initCalendar()
+  </script>
+</body>
 </html>
