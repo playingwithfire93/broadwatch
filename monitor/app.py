@@ -691,6 +691,11 @@ SAMPLE_EVENTS = [
 
 
 
+@app.route('/ping')
+def ping():
+    return jsonify({'status': 'ok'}), 200
+
+
 @app.route('/')
 def home():
     # Redirect root to the lightweight HTML UI
