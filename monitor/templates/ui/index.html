@@ -8,9 +8,11 @@
   <style>
     :root {
       --bg: #fafaf8;
+      --surface: #fff;
       --ink: #0f0e0c;
       --ink2: #3a3830;
       --ink3: #8a8680;
+      --border: rgba(15,14,12,0.07);
 
       /* Musical colors */
       --wicked:  #7c3aed; --wicked-l: #ede9fe;
@@ -21,6 +23,32 @@
 
       --shadow: 0 2px 16px rgba(15,14,12,0.08);
       --shadow-lg: 0 8px 40px rgba(15,14,12,0.13);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f0e0c;
+      --surface: #1a1916;
+      --ink: #f5f4f0;
+      --ink2: #b8b4ac;
+      --ink3: #6b6760;
+      --border: rgba(245,244,240,0.08);
+      --shadow: 0 2px 16px rgba(0,0,0,0.3);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+      --wicked-l: #2e1065; --lesmis-l: #450a0a;
+      --tbom-l: #0c4a6e; --houdini-l: #451a03;
+      --other-l: #064e3b;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #0f0e0c; --surface: #1a1916;
+        --ink: #f5f4f0; --ink2: #b8b4ac; --ink3: #6b6760;
+        --border: rgba(245,244,240,0.08);
+        --shadow: 0 2px 16px rgba(0,0,0,0.3);
+        --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+        --wicked-l: #2e1065; --lesmis-l: #450a0a;
+        --tbom-l: #0c4a6e; --houdini-l: #451a03; --other-l: #064e3b;
+      }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,9 +67,23 @@
       position: sticky; top: 0; z-index: 200;
       background: rgba(250,250,248,0.93);
       backdrop-filter: blur(12px);
-      border-bottom: 1.5px solid rgba(15,14,12,0.07);
+      border-bottom: 1.5px solid var(--border);
       padding: 0 2rem;
+      transition: background .3s;
     }
+    [data-theme="dark"] nav { background: rgba(15,14,12,0.93); }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) nav { background: rgba(15,14,12,0.93); }
+    }
+
+    .theme-toggle {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: none; border: 1.5px solid var(--border);
+      cursor: pointer; font-size: 1rem; color: var(--ink2);
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s, border-color .15s;
+    }
+    .theme-toggle:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
     .nav-inner {
       max-width: 1200px; margin: 0 auto;
       height: 60px; display: flex; align-items: center; gap: 2rem;
@@ -83,7 +125,20 @@
     @keyframes pulse-g { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
 
     /* ── HERO ── */
+    .hero-wrap {
+      position: relative; overflow: hidden;
+    }
+    .hero-wrap::before {
+      content: '';
+      position: absolute; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 60% 70% at 80% 40%, rgba(124,58,237,0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 20% 70%, rgba(8,145,178,0.06) 0%, transparent 65%),
+        radial-gradient(ellipse 40% 50% at 60% 80%, rgba(220,38,38,0.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
     .hero {
+      position: relative; z-index: 1;
       max-width: 1200px; margin: 0 auto;
       padding: 4rem 2rem 2rem;
       display: grid; grid-template-columns: 1fr 1fr;
@@ -153,6 +208,69 @@
     .pill-houdini { background: var(--houdini-l);color: var(--houdini);border-color: rgba(217,119,6,.2); }
     .pill-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
+    /* ── EN CARTELERA ── */
+    .cartelera-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.5rem;
+    }
+    .cartelera-card {
+      border-radius: 20px; overflow: hidden;
+      box-shadow: var(--shadow);
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      display: flex; flex-direction: column;
+      transition: transform .22s, box-shadow .22s;
+      text-decoration: none; color: inherit;
+    }
+    .cartelera-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: var(--shadow-lg); }
+    .cartelera-poster {
+      width: 100%; aspect-ratio: 2/3;
+      object-fit: cover; object-position: center top;
+      display: block;
+    }
+    .cartelera-poster-placeholder {
+      width: 100%; aspect-ratio: 2/3;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 3rem;
+    }
+    .cartelera-info {
+      padding: 1rem 1.1rem 1.2rem;
+      display: flex; flex-direction: column; gap: 0.4rem;
+      flex: 1;
+    }
+    .cartelera-tag {
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; padding: 0.2rem 0.55rem;
+      border-radius: 999px; align-self: flex-start;
+    }
+    .cartelera-title {
+      font-family: 'Fraunces', serif;
+      font-size: 1.1rem; font-weight: 900; color: var(--ink);
+      line-height: 1.2; margin-top: 0.2rem;
+    }
+    .cartelera-teatro {
+      font-size: 0.76rem; color: var(--ink3); font-weight: 600;
+      line-height: 1.4;
+    }
+    .cartelera-btn {
+      display: block; margin-top: 0.85rem;
+      padding: 0.55rem 1rem; border-radius: 10px;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.78rem; font-weight: 700;
+      text-align: center; text-decoration: none; color: #fff;
+      transition: opacity .15s;
+    }
+    .cartelera-btn:hover { opacity: 0.85; }
+    .cartelera-soon {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em;
+      text-transform: uppercase; color: var(--ink3);
+      margin-top: 0.85rem; padding: 0.45rem 0;
+      text-align: center;
+      border: 1.5px dashed rgba(15,14,12,0.15);
+      border-radius: 10px;
+    }
+
     /* ── NOVEDADES ── */
     .section {
       max-width: 1200px; margin: 4rem auto 0;
@@ -182,18 +300,28 @@
       gap: 1.25rem;
     }
     .news-card {
-      background: #fff; border-radius: 16px;
-      border: 1.5px solid rgba(15,14,12,0.07);
-      padding: 1.25rem; box-shadow: var(--shadow);
+      background: var(--surface); border-radius: 16px;
+      border: 1.5px solid var(--border);
+      padding: 0; box-shadow: var(--shadow);
       text-decoration: none; color: inherit;
-      display: flex; flex-direction: column; gap: 0.75rem;
+      display: flex; flex-direction: column;
       transition: transform .2s, box-shadow .2s;
       position: relative; overflow: hidden;
     }
     .news-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+    .news-card-img {
+      width: 100%; height: 160px;
+      object-fit: cover; object-position: center top;
+      display: block; flex-shrink: 0;
+      border-radius: 0;
+      background: rgba(15,14,12,0.06);
+    }
     .news-card-stripe {
       position: absolute; top: 0; left: 0; right: 0; height: 4px;
-      border-radius: 16px 16px 0 0;
+    }
+    .news-card-content {
+      padding: 1.1rem 1.25rem 1.25rem;
+      display: flex; flex-direction: column; gap: 0.65rem; flex: 1;
     }
     .news-card-top { display: flex; align-items: center; gap: 0.6rem; }
     .news-musical-tag {
@@ -217,8 +345,8 @@
 
     /* ── CALENDAR ── */
     .cal-wrap {
-      background: #fff; border-radius: 20px;
-      border: 1.5px solid rgba(15,14,12,0.07);
+      background: var(--surface); border-radius: 20px;
+      border: 1.5px solid var(--border);
       box-shadow: var(--shadow); overflow: hidden;
     }
     .cal-header {
@@ -297,8 +425,8 @@
     /* ── EVENT TOOLTIP / POPUP ── */
     .ev-popup {
       position: fixed; z-index: 500;
-      background: #fff; border-radius: 16px;
-      border: 1.5px solid rgba(15,14,12,0.1);
+      background: var(--surface); border-radius: 16px;
+      border: 1.5px solid var(--border);
       box-shadow: var(--shadow-lg);
       padding: 1.25rem; width: 280px;
       pointer-events: none; opacity: 0;
@@ -329,8 +457,8 @@
     /* ── SUGGESTIONS ── */
     .suggest-box {
       max-width: 640px; margin: 0 auto;
-      background: #fff; border-radius: 20px;
-      border: 1.5px solid rgba(15,14,12,0.07);
+      background: var(--surface); border-radius: 20px;
+      border: 1.5px solid var(--border);
       padding: 2rem 2.25rem; box-shadow: var(--shadow);
     }
     .suggest-box p {
@@ -438,11 +566,13 @@
           <span class="live-dot"></span>
           En directo
         </div>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Cambiar tema" title="Cambiar tema">🌙</button>
       </div>
     </div>
   </nav>
 
   <!-- HERO -->
+  <div class="hero-wrap">
   <section class="hero fu">
     <div class="hero-text">
       <div class="hero-tag">🎭 Tu portal de musicales en España</div>
@@ -474,6 +604,17 @@
         Houdini
       </a>
     </div>
+  </section>
+
+  </div><!-- /hero-wrap -->
+
+  <!-- EN CARTELERA -->
+  <section class="section" id="cartelera" style="margin-top:3.5rem;">
+    <div class="section-hd fu fu1">
+      <h2>En cartelera</h2>
+      <div class="rule"></div>
+    </div>
+    <div class="cartelera-grid fu fu2" id="cartelera-grid"></div>
   </section>
 
   <!-- NOVEDADES -->
@@ -583,6 +724,13 @@
 
   <script>
     // ── DATA ──────────────────────────────────────────────────────────────────
+    const POSTERS = {
+      wicked:  '/static/ui/posters/wicked.jpg',
+      lesmis:  '/static/ui/posters/les-miserables.jpg',
+      tbom:    '/static/ui/posters/book_of_mormon.jpg',
+      houdini: '/static/ui/posters/houdini.jpg',
+    }
+
     const MUSICALS = {
       wicked:  { name:'Wicked',            color:'#7c3aed', light:'#ede9fe', cls:'ev-wicked',  tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01',  teatro:'Teatro Coliseum, Madrid' },
       lesmis:  { name:'Los Miserables',    color:'#dc2626', light:'#fee2e2', cls:'ev-lesmis',  tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01',    teatro:'Teatro Nuevo Apolo, Madrid' },
@@ -807,16 +955,23 @@
       document.getElementById('news-count').textContent = data.length + ' noticias'
       grid.innerHTML = data.map((n, i) => {
         const m = MUSICALS[n.musical] || { color:'#059669', light:'#d1fae5', name: n.musical }
+        const poster = POSTERS[n.musical] || ''
+        const imgHtml = poster
+          ? `<img class="news-card-img" src="${poster}" alt="${m.name}" loading="lazy">`
+          : `<div class="news-card-img" style="background:${m.light}"></div>`
         return `
         <a class="news-card fu" href="${n.url || '#'}" style="animation-delay:${i*.07}s">
           <div class="news-card-stripe" style="background:${m.color}"></div>
-          <div class="news-card-top">
-            <span class="news-musical-tag" style="background:${m.light};color:${m.color}">${m.name}</span>
-            <span class="news-ts">${n.ts || ''}</span>
+          ${imgHtml}
+          <div class="news-card-content">
+            <div class="news-card-top">
+              <span class="news-musical-tag" style="background:${m.light};color:${m.color}">${m.name}</span>
+              <span class="news-ts">${n.ts || ''}</span>
+            </div>
+            <div class="news-title">${n.title}</div>
+            <div class="news-body">${n.body || n.summary || ''}</div>
+            <span class="news-link">Leer más →</span>
           </div>
-          <div class="news-title">${n.title}</div>
-          <div class="news-body">${n.body || n.summary || ''}</div>
-          <span class="news-link">Leer más →</span>
         </a>`
       }).join('')
     }
@@ -875,7 +1030,59 @@
       document.getElementById('suggest-form').style.display = 'block'
     }
 
+    // ── DARK MODE ────────────────────────────────────────────────────────────
+    ;(function() {
+      const saved = localStorage.getItem('bw_theme')
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      const isDark = saved ? saved === 'dark' : prefersDark
+      if (isDark) document.documentElement.setAttribute('data-theme', 'dark')
+      const btn = document.getElementById('theme-toggle')
+      function syncIcon() {
+        btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙'
+      }
+      syncIcon()
+      btn.addEventListener('click', () => {
+        const dark = document.documentElement.getAttribute('data-theme') === 'dark'
+        document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark')
+        localStorage.setItem('bw_theme', dark ? 'light' : 'dark')
+        syncIcon()
+      })
+    })()
+
+    // ── EN CARTELERA ─────────────────────────────────────────────────────────
+    const CARTELERA = [
+      { key:'wicked',  name:'Wicked',          teatro:'Teatro Coliseum, Madrid', tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01',  soon:false },
+      { key:'lesmis',  name:'Los Miserables',  teatro:'Teatro Nuevo Apolo, Madrid', tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01', soon:false },
+      { key:'tbom',    name:'Book of Mormon',  teatro:'Teatro Lope de Vega, Madrid', tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', soon:false },
+      { key:'houdini', name:'Houdini',         teatro:'Madrid · por confirmar', tickets:'#', soon:true },
+    ]
+
+    function renderCartelera() {
+      const grid = document.getElementById('cartelera-grid')
+      grid.innerHTML = CARTELERA.map((show, i) => {
+        const m = MUSICALS[show.key]
+        const poster = POSTERS[show.key]
+        const imgEl = poster
+          ? `<img class="cartelera-poster" src="${poster}" alt="${show.name}" loading="lazy">`
+          : `<div class="cartelera-poster-placeholder" style="background:${m.light}">🎭</div>`
+        const cta = show.soon
+          ? `<div class="cartelera-soon">Próximamente</div>`
+          : `<a class="cartelera-btn" href="${show.tickets}" target="_blank" rel="noopener noreferrer" style="background:${m.color}" onclick="event.stopPropagation()">Comprar entradas →</a>`
+        return `
+        <a class="cartelera-card fu" href="${show.tickets === '#' ? '#cartelera' : show.tickets}" target="${show.soon ? '_self' : '_blank'}" rel="noopener noreferrer" style="animation-delay:${i*.08}s">
+          ${imgEl}
+          <div class="cartelera-info">
+            <span class="cartelera-tag" style="background:${m.light};color:${m.color}">${m.name}</span>
+            <div class="cartelera-title">${show.name}</div>
+            <div class="cartelera-teatro">${show.teatro}</div>
+            ${cta}
+          </div>
+        </a>`
+      }).join('')
+    }
+
     // ── INIT ─────────────────────────────────────────────────────────────────
+    renderCartelera()
     loadNews()
     initCalendar()
   </script>
