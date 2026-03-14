@@ -760,8 +760,85 @@
     }
     .toast.visible { opacity:1; transform:translateY(0); }
 
+    /* ── SOBRE MÍ ── */
+    .sobre-mi-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3.5rem;
+      align-items: center;
+    }
+    .sobre-mi-text h3 {
+      font-family: 'Fraunces', serif;
+      font-size: 1.25rem; font-weight: 900;
+      color: var(--ink); margin-bottom: 0.4rem;
+    }
+    .sobre-mi-text p {
+      font-size: 0.96rem; line-height: 1.75;
+      color: var(--ink2);
+    }
+    .sobre-mi-text .sm-tag {
+      display: inline-block;
+      background: var(--tbom-l); color: var(--tbom);
+      font-size: 0.72rem; font-weight: 700;
+      padding: 0.2rem 0.6rem; border-radius: 999px;
+      margin-bottom: 0.75rem; text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .slideshow {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      aspect-ratio: 9/16;
+      max-height: 520px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      box-shadow: var(--shadow-lg);
+    }
+    .slideshow-track {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      transition: transform .5s cubic-bezier(.4,0,.2,1);
+    }
+    .slideshow-slide {
+      min-width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .slideshow-dots {
+      position: absolute; bottom: 0.75rem; left: 50%;
+      transform: translateX(-50%);
+      display: flex; gap: 5px;
+    }
+    .slideshow-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(255,255,255,0.55);
+      transition: background .3s, width .3s;
+      cursor: pointer;
+    }
+    .slideshow-dot.active {
+      background: #fff;
+      width: 18px; border-radius: 4px;
+    }
+    .slideshow-nav {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      display: flex; justify-content: space-between;
+      width: 100%; padding: 0 0.6rem; pointer-events: none;
+    }
+    .slideshow-btn {
+      pointer-events: all;
+      width: 34px; height: 34px; border-radius: 50%;
+      background: rgba(0,0,0,0.35); color: #fff;
+      border: none; font-size: 1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s;
+    }
+    .slideshow-btn:hover { background: rgba(0,0,0,0.6); }
+
     /* ── RESPONSIVE ── */
     @media(max-width: 860px) {
+      .sobre-mi-wrap { grid-template-columns: 1fr; gap: 2rem; }
+      .slideshow { max-height: 380px; }
       .hero { grid-template-columns: 1fr; gap: 2rem; padding-top: 2.5rem; }
       .cal-day { min-height: 68px; }
       .field-row { grid-template-columns: 1fr; }
@@ -795,6 +872,7 @@
         <a href="#calendario" class="nav-link">Calendario</a>
         <a href="#buscaplan" class="nav-link">Busca Plan</a>
         <a href="#sugerencias" class="nav-link">Sugerencias</a>
+        <a href="#sobre-mi" class="nav-link">Sobre mí</a>
       </div>
       <div class="nav-right">
         <div class="live-badge">
@@ -1035,6 +1113,31 @@
         <h3>¡Gracias!</h3>
         <p>Tu sugerencia ha llegado. La leeré con mucho gusto.</p>
         <button class="btn btn-outline" style="margin-top:.75rem;font-size:.82rem;padding:.5rem 1.2rem;" onclick="resetSuggestion()">Enviar otra</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOBRE MÍ -->
+  <section class="section" id="sobre-mi" style="margin-top:4rem;">
+    <div class="section-hd fu fu1">
+      <h2>Sobre mí</h2>
+      <div class="rule"></div>
+    </div>
+    <div class="sobre-mi-wrap fu fu2">
+      <div class="sobre-mi-text">
+        <span class="sm-tag">Fan desde siempre</span>
+        <h3>Hola, soy Blanca 👋</h3>
+        <p>Me gustan los musicales desde pequeña. Con el tiempo fui a tantas funciones y acabé tan enganchada que decidí crear esta web para que otros fans también pudieran estar al tanto de todo lo que pasa en la escena musical española.</p>
+        <p style="margin-top:1rem;">BroadWatch nació de querer tener en un solo lugar las novedades de elenco, los cambios de fecha y los avisos de entradas — todo lo que yo misma echaba en falta.</p>
+        <p style="margin-top:1rem;">Si quieres charlar de musicales, escribirme o simplemente compartir la emoción de haber visto algo increíble, ¡estoy aquí!</p>
+      </div>
+      <div class="slideshow" id="slideshow">
+        <div class="slideshow-track" id="slideshow-track"></div>
+        <div class="slideshow-nav">
+          <button class="slideshow-btn" onclick="slidePrev()" aria-label="Anterior">&#8592;</button>
+          <button class="slideshow-btn" onclick="slideNext()" aria-label="Siguiente">&#8594;</button>
+        </div>
+        <div class="slideshow-dots" id="slideshow-dots"></div>
       </div>
     </div>
   </section>
@@ -1733,6 +1836,68 @@
     renderProximamente()
     loadNews()
     initCalendar()
+
+    // ── SLIDESHOW ─────────────────────────────────────────────────────────────
+    const SLIDESHOW_PHOTOS = [
+      '/static/ui/sobre-mi/1.png',
+      '/static/ui/sobre-mi/2.png',
+      '/static/ui/sobre-mi/3.png',
+      '/static/ui/sobre-mi/4.png',
+      '/static/ui/sobre-mi/5.png',
+      '/static/ui/sobre-mi/6.png',
+      '/static/ui/sobre-mi/7.png',
+      '/static/ui/sobre-mi/8.png',
+      '/static/ui/sobre-mi/9.png',
+      '/static/ui/sobre-mi/10.png',
+      '/static/ui/sobre-mi/11.png',
+      '/static/ui/sobre-mi/12.png',
+      '/static/ui/sobre-mi/13.png',
+      '/static/ui/sobre-mi/14.png',
+      '/static/ui/sobre-mi/15.png',
+      '/static/ui/sobre-mi/16.png',
+      '/static/ui/sobre-mi/17.png',
+      '/static/ui/sobre-mi/18.png',
+      '/static/ui/sobre-mi/19.png',
+      '/static/ui/sobre-mi/20.png',
+    ]
+
+    let slideIdx = 0
+    let slideTimer = null
+
+    function initSlideshow() {
+      const track = document.getElementById('slideshow-track')
+      const dotsEl = document.getElementById('slideshow-dots')
+      if (!track) return
+      track.innerHTML = SLIDESHOW_PHOTOS.map(src =>
+        `<img class="slideshow-slide" src="${src}" alt="Foto de Blanca en un musical" loading="lazy">`
+      ).join('')
+      dotsEl.innerHTML = SLIDESHOW_PHOTOS.map((_, i) =>
+        `<div class="slideshow-dot${i===0?' active':''}" onclick="slideTo(${i})"></div>`
+      ).join('')
+      startSlideTimer()
+    }
+
+    function slideTo(idx) {
+      slideIdx = (idx + SLIDESHOW_PHOTOS.length) % SLIDESHOW_PHOTOS.length
+      document.getElementById('slideshow-track').style.transform = `translateX(-${slideIdx * 100}%)`
+      document.querySelectorAll('.slideshow-dot').forEach((d, i) =>
+        d.classList.toggle('active', i === slideIdx)
+      )
+      resetSlideTimer()
+    }
+
+    function slideNext() { slideTo(slideIdx + 1) }
+    function slidePrev() { slideTo(slideIdx - 1) }
+
+    function startSlideTimer() {
+      slideTimer = setInterval(() => slideTo(slideIdx + 1), 4000)
+    }
+    function resetSlideTimer() {
+      clearInterval(slideTimer)
+      startSlideTimer()
+    }
+
+    initSlideshow()
   </script>
 </body>
 </html>
