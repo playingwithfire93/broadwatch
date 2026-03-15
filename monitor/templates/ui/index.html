@@ -1328,8 +1328,13 @@
         const a = document.createElement('a')
         a.className = `cal-event ${MUSICALS[ev.musical].cls}`
         a.textContent = `${ev.session} ${ev.title}`
-        a.href = '#'
-        a.addEventListener('click', e => { e.preventDefault(); openPopup(ev, a) })
+        const yyyy = ev.date.y
+        const mm = String(ev.date.m + 1).padStart(2, '0')
+        const dd = String(ev.date.d).padStart(2, '0')
+        a.href = ev.tickets === '#' ? '#' : `${ev.tickets}?fecha=${yyyy}${mm}${dd}`
+        a.target = '_blank'
+        a.rel = 'noopener noreferrer'
+        if (ev.tickets === '#') a.addEventListener('click', e => e.preventDefault())
         cell.appendChild(a)
       })
       if (events.length > maxShow) {
