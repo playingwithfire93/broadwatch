@@ -2,7 +2,11 @@ import time
 import requests
 from bs4 import BeautifulSoup
 import hashlib
-from plyer import notification
+from concurrent.futures import ThreadPoolExecutor, as_completed
+try:
+    from plyer import notification
+except Exception:
+    notification = None
 import webbrowser
 try:
     import winsound
@@ -100,6 +104,7 @@ if account_sid and auth_token:
 
 # Initialize state
 old_hashes = {url: '' for url in URLS}
+_rate_limited_until = {}   # url -> timestamp hasta el que está rate-limited
 start_time = time.time()
 consecutive_failures = {url: 0 for url in URLS}
 disabled_urls = set()
@@ -441,12 +446,13 @@ def notify_change(url, old_text, new_text):
     # 1. Pedir resumen legible a Claude
     summary = summarize_diff(url, changes)
 
-    # 2. Notificacion de escritorio (falla silenciosamente en servidores)
+    # 2. Notificacion de escritorio (solo en local con plyer disponible)
     short_msg = (summary or f"Cambio en {url}")[:250]
-    try:
-        notification.notify(title="Novedades BroadWatch", message=short_msg, timeout=10)
-    except Exception:
-        pass
+    if notification:
+        try:
+            notification.notify(title="Novedades BroadWatch", message=short_msg, timeout=10)
+        except Exception:
+            pass
 
     print(f"Cambio detectado en {url}")
     print(f"Resumen: {summary or '(sin resumen)'}")
@@ -481,14 +487,17 @@ def notify_change(url, old_text, new_text):
 
 
 def get_page_content(url):
-    try:
-        response = SESSION.get(url, timeout=20)
+    # Si la URL está en rate-limit todavía, la saltamos sin hacer petición
+    if _rate_limited_until.get(url, 0) > time.time():
+        return ''
 
-        # 429 = rate limited: no lo tratamos como contenido vacío, sino como fallo transitorio
+    try:
+        response = SESSION.get(url, timeout=10)  # 10s es suficiente; antes 20s podía bloquear el pool
+
         if response.status_code == 429:
             retry_after = int(response.headers.get('Retry-After', 60))
-            print(f"⏳ Rate limited por {url} — esperando {retry_after}s")
-            time.sleep(retry_after)
+            _rate_limited_until[url] = time.time() + retry_after  # marca para reintento futuro
+            print(f"⏳ Rate limited por {url} — reintento en {retry_after}s (sin bloquear el loop)")
             return ''
 
         response.raise_for_status()
@@ -497,7 +506,6 @@ def get_page_content(url):
             raise ValueError("Empty response content")
 
         soup = BeautifulSoup(response.text, 'html.parser')
-        # Eliminar scripts y estilos antes de extraer texto para reducir ruido en el diff
         for tag in soup(['script', 'style', 'noscript']):
             tag.decompose()
         return soup.get_text(separator=' ', strip=True)
@@ -636,27 +644,31 @@ class Monitor:
                 continue
 
             self.last_run = datetime.utcnow().isoformat() + 'Z'
+            urls_to_check = [u for u in list(self.urls) if u not in disabled_urls]
 
-            for url in list(self.urls):
-                if url in disabled_urls:
-                    continue
+            # Fetch todas las URLs en paralelo (max 3 simultáneas para no saturar servidores)
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                futures = {executor.submit(get_page_content, u): u for u in urls_to_check}
+                for future in as_completed(futures):
+                    url = futures[future]
+                    try:
+                        content = future.result()
+                    except Exception as e:
+                        print(f"⚠️ Error inesperado fetching {url}: {e}")
+                        content = ''
 
-                content = get_page_content(url)
-                # Pequeña pausa entre URLs para no saturar los servidores
-                time.sleep(2)
+                    if not content:
+                        consecutive_failures[url] = consecutive_failures.get(url, 0) + 1
+                        if consecutive_failures[url] >= MAX_CONSECUTIVE_FAILURES:
+                            disabled_urls.add(url)
+                        continue
 
-                if not content:
-                    consecutive_failures[url] = consecutive_failures.get(url, 0) + 1
-                    if consecutive_failures[url] >= MAX_CONSECUTIVE_FAILURES:
-                        disabled_urls.add(url)
-                    continue
+                    consecutive_failures[url] = 0
 
-                consecutive_failures[url] = 0
+                    if old_contents.get(url) and content != old_contents.get(url):
+                        notify_change(url, old_contents.get(url), content)
 
-                if old_contents.get(url) and content != old_contents.get(url):
-                    notify_change(url, old_contents.get(url), content)
-
-                old_contents[url] = content
+                    old_contents[url] = content
 
             reenable_disabled_urls()
             time.sleep(self.check_interval)
