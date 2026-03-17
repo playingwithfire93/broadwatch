@@ -1,4 +1,12 @@
+import logging
 import time
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
+log = logging.getLogger('broadwatch')
 import requests
 from bs4 import BeautifulSoup
 import hashlib
@@ -146,7 +154,7 @@ def get_alert_assets(url):
 
 def send_telegram_alert(url, changes, timestamp, image_path):
     if not TELEGRAM_TOKEN or not CHAT_ID:
-        print("⚠️ Telegram credentials not configured; skipping Telegram alert.")
+        log.warning("Telegram credentials not configured; skipping Telegram alert.")
         return
 
     try:
@@ -161,29 +169,29 @@ def send_telegram_alert(url, changes, timestamp, image_path):
                     }
                     resp = requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto", data=data, files=files, timeout=10)
                     if resp.ok:
-                        print(f"✅ Telegram photo alert sent for {url}")
+                        log.info(f"Telegram photo alert sent for {url}")
                         return
                     else:
-                        print(f"⚠️ Telegram sendPhoto returned {resp.status_code}: {resp.text}")
+                        log.warning(f"Telegram sendPhoto returned {resp.status_code}: {resp.text}")
             except Exception as e:
-                print(f"⚠️ Telegram photo send failed: {e}")
+                log.warning(f"Telegram photo send failed: {e}")
 
         # Fallback to sendMessage with truncated changes
         msg = f"🎭 Ticket Update Detected\n{url}\n{timestamp}\n\nChanges:\n{changes[:1900]}"
         payload = {"chat_id": CHAT_ID, "text": msg}
         r = requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage", json=payload, timeout=10)
         if r.ok:
-            print(f"📲 Telegram message sent for {url}")
+            log.info(f"Telegram message sent for {url}")
         else:
-            print(f"❌ Telegram send failed: {r.status_code} {r.text}")
+            log.error(f"Telegram send failed: {r.status_code} {r.text}")
     except Exception as e:
-        print(f"❌ Failed to send Telegram alert: {e}")
+        log.error(f"Failed to send Telegram alert: {e}")
 
 
 try:
     import pywhatkit as kit
 except Exception as e:
-    print("pywhatkit import failed (continuando para debug):", e)
+    log.warning(f"pywhatkit import failed: {e}")
     kit = None
 
 whatsapp_numbers = [n for n in [
@@ -203,16 +211,16 @@ def send_whatsapp_alert(phone_number, url, changes):
                 caption=message,
                 wait_time=15
             )
-            print("✅ WhatsApp alert sent")
+            log.info("WhatsApp alert sent")
         else:
-            print("⚠️ pywhatkit no disponible; no se envió WhatsApp")
+            log.warning("pywhatkit no disponible; no se envió WhatsApp")
     except Exception as e:
-        print(f"❌ Error sending WhatsApp alert: {e}")
+        log.error(f"Error sending WhatsApp alert: {e}")
 
 
 def send_discord_alert(url, changes, image_path=None):
     if not DISCORD_WEBHOOK:
-        print("⚠️ Discord webhook not configured; skipping Discord alert.")
+        log.warning("Discord webhook not configured; skipping Discord alert.")
         return
     try:
         content = f"🎭 **Ticket Update Detected**\n{url}\n\nChanges:\n{changes[:1900]}"
@@ -220,11 +228,11 @@ def send_discord_alert(url, changes, image_path=None):
         # Post to Discord webhook
         resp = requests.post(DISCORD_WEBHOOK, json=payload, timeout=10)
         if resp.status_code in (200, 204):
-            print("✅ Discord alert sent")
+            log.info("Discord alert sent")
         else:
-            print(f"❌ Discord webhook returned {resp.status_code}: {resp.text}")
+            log.error(f"Discord webhook returned {resp.status_code}: {resp.text}")
     except Exception as e:
-        print(f"❌ Failed to send Discord alert: {e}")
+        log.error(f"Failed to send Discord alert: {e}")
 
 import websockets
 
@@ -253,7 +261,7 @@ def _notification_worker():
             try:
                 notify_change(url, old_text, new_text)
             except Exception as e:
-                print(f"❌ Error en worker de notificaciones: {e}")
+                log.error(f"Error en worker de notificaciones: {e}")
             finally:
                 _notif_queue.task_done()
         except _queue.Empty:
@@ -280,7 +288,7 @@ def summarize_diff(url, diff_text):
     """Llama a Claude para resumir un diff en lenguaje humano en español."""
     client = _get_anthropic_client()
     if not client:
-        print("⚠️ ANTHROPIC_API_KEY no configurada — usando resumen genérico")
+        log.warning("ANTHROPIC_API_KEY no configurada — usando resumen genérico")
         return None
 
     truncated = diff_text[:3000] if len(diff_text) > 3000 else diff_text
@@ -301,12 +309,12 @@ def summarize_diff(url, diff_text):
             messages=[{"role": "user", "content": prompt}]
         )
         summary = message.content[0].text.strip().strip('"').strip("'")
-        print(f"🤖 Resumen generado: {summary}")
+        log.info(f"Resumen generado: {summary}")
         
         
         return summary
     except Exception as e:
-        print(f"⚠️ Error llamando a Claude: {e}")
+        log.warning(f"Error llamando a Claude: {e}")
         return None
 
 # Logs directory and manager
@@ -349,7 +357,7 @@ class LogManager:
             with p.open('w', encoding='utf-8') as f:
                 json.dump(entries, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            print(f"❌ Error saving logs for {key}: {e}")
+            log.error(f"Error saving logs for {key}: {e}")
 
     def add(self, key: str, entry: dict):
         # Populate cache from disk on first access, then work in memory
@@ -363,7 +371,7 @@ class LogManager:
         try:
             self._write_text_file(key, entries)
         except Exception as e:
-            print(f"❌ Error writing text log for {key}: {e}")
+            log.error(f"Error writing text log for {key}: {e}")
 
     def get(self, key: str, n: int = None):
         n = n or self.max_entries
@@ -388,7 +396,7 @@ class LogManager:
             with p.open('w', encoding='utf-8') as f:
                 f.write(text)
         except Exception as e:
-            print(f"❌ Error saving text log for {key}: {e}")
+            log.error(f"Error saving text log for {key}: {e}")
 
 
 LOG_MANAGER = LogManager(LOG_DIR, max_entries=MAX_LOG_ENTRIES)
@@ -456,9 +464,9 @@ def save_event(monitor_key, url, summary, changes):
     _events_cache = events  # update cache before writing to disk
     try:
         EVENTS_FILE.write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding='utf-8')
-        print(f"💾 Evento guardado: {event['title']}")
+        log.info(f"Evento guardado: {event['title']}")
     except Exception as e:
-        print(f"\u274c Error guardando evento: {e}")
+        log.error(f"Error guardando evento: {e}")
     return event
 
 
@@ -476,8 +484,8 @@ def notify_change(url, old_text, new_text):
         except Exception:
             pass
 
-    print(f"Cambio detectado en {url}")
-    print(f"Resumen: {summary or '(sin resumen)'}")
+    log.info(f"Cambio detectado en {url}")
+    log.info(f"Resumen: {summary or '(sin resumen)'}")
 
     # 3. Guardar en logs tecnicos y en events.json para la web
     monitor_key = get_monitor_key_for_url(url) or 'general'
@@ -490,7 +498,7 @@ def notify_change(url, old_text, new_text):
         }
         LOG_MANAGER.add(monitor_key, entry)
     except Exception as e:
-        print(f"Error saving log: {e}")
+        log.error(f"Error saving log: {e}")
 
     save_event(monitor_key, url, summary, changes)
 
@@ -519,7 +527,7 @@ def get_page_content(url):
         if response.status_code == 429:
             retry_after = int(response.headers.get('Retry-After', 60))
             _rate_limited_until[url] = time.time() + retry_after  # marca para reintento futuro
-            print(f"⏳ Rate limited por {url} — reintento en {retry_after}s (sin bloquear el loop)")
+            log.info(f"Rate limited por {url} — reintento en {retry_after}s")
             return ''
 
         response.raise_for_status()
@@ -533,7 +541,7 @@ def get_page_content(url):
         return soup.get_text(separator=' ', strip=True)
 
     except requests.exceptions.RequestException as e:
-        print(f"⚠️ Error fetching {url}: {str(e)[:200]}")
+        log.warning(f"Error fetching {url}: {str(e)[:200]}")
         return ''
 
 
@@ -588,10 +596,10 @@ def get_banner():
 def reenable_disabled_urls():
     global disabled_urls
     for url in list(disabled_urls):
-        print(f"\n♻️ Reintentando conexión con {url}...")
+        log.info(f"Reintentando conexión con {url}...")
         content = get_page_content(url)
         if content:
-            print(f"✅ ¡Rehabilitado {url}!")
+            log.info(f"Rehabilitado {url}")
             disabled_urls.remove(url)
             consecutive_failures[url] = 0
             RETRY_BACKOFF[url] = 30
@@ -659,7 +667,7 @@ class Monitor:
         }
 
     def run(self):
-        print("▶️ Monitor started")
+        log.info("Monitor started")
         while not self._stop_event.is_set():
             if self._pause_event.is_set():
                 time.sleep(1)
@@ -676,7 +684,7 @@ class Monitor:
                     try:
                         content = future.result()
                     except Exception as e:
-                        print(f"⚠️ Error inesperado fetching {url}: {e}")
+                        log.warning(f"Error inesperado fetching {url}: {e}")
                         content = ''
 
                     if not content:
@@ -874,7 +882,7 @@ def api_logs_by_url_text():
 @app.route('/api/notify', methods=['POST'])
 def api_notify():
     data = request.get_json() or {}
-    print(f"[/api/notify] received request: {data}")
+    log.info(f"[/api/notify] received request: {data}")
     event_id = data.get('event_id')
     url = data.get('url')
     # Determine URL from event mapping if event_id provided
@@ -898,7 +906,7 @@ def api_notify():
         try:
             notify_change(url, old, new)
         except Exception as ex:
-            print(f"Error running notify_change in bg: {ex}")
+            log.error(f"Error running notify_change in bg: {ex}")
 
     threading.Thread(target=_bg, daemon=True).start()
     return jsonify({'ok': True, 'url': url})
@@ -962,7 +970,7 @@ def save_suggestion(entry):
     try:
         SUGGESTIONS_FILE.write_text(json.dumps(suggestions, ensure_ascii=False, indent=2), encoding='utf-8')
     except Exception as e:
-        print(f"❌ Error guardando sugerencia: {e}")
+        log.error(f"Error guardando sugerencia: {e}")
 
 
 def classify_suggestion(message, musical, name):
@@ -987,13 +995,13 @@ def classify_suggestion(message, musical, name):
         result = json.loads(msg.content[0].text.strip())
         return result.get('categoria', 'otro'), result.get('gracias', '¡Gracias por tu sugerencia!')
     except Exception as e:
-        print(f"⚠️ Error clasificando sugerencia con Haiku: {e}")
+        log.warning(f"Error clasificando sugerencia con Haiku: {e}")
         return 'otro', '¡Gracias por tu sugerencia!'
 
 
 def send_suggestion_to_discord(entry, categoria):
     if not DISCORD_WEBHOOK_SUGGESTIONS:
-        print("⚠️ Discord suggestions webhook no configurado.")
+        log.warning("Discord suggestions webhook no configurado.")
         return
     category_emojis = {
         'petición_musical': '🎭', 'mejora_web': '💡', 'bug': '🐛',
@@ -1013,11 +1021,11 @@ def send_suggestion_to_discord(entry, categoria):
     try:
         resp = requests.post(DISCORD_WEBHOOK_SUGGESTIONS, json={"content": content}, timeout=10)
         if resp.status_code in (200, 204):
-            print(f"✅ Sugerencia enviada a Discord ({categoria})")
+            log.info(f"Sugerencia enviada a Discord ({categoria})")
         else:
-            print(f"❌ Discord suggestions returned {resp.status_code}: {resp.text}")
+            log.error(f"Discord suggestions returned {resp.status_code}: {resp.text}")
     except Exception as e:
-        print(f"❌ Error enviando sugerencia a Discord: {e}")
+        log.error(f"Error enviando sugerencia a Discord: {e}")
 
 
 @app.route('/api/suggestions', methods=['POST'])
@@ -1074,7 +1082,7 @@ def save_companions(companions):
     try:
         COMPANIONS_FILE.write_text(json.dumps(companions, ensure_ascii=False, indent=2), encoding='utf-8')
     except Exception as e:
-        print(f"❌ Error guardando companions: {e}")
+        log.error(f"Error guardando companions: {e}")
 
 def send_companion_to_discord(entry):
     if not DISCORD_WEBHOOK_SUGGESTIONS:
@@ -1092,7 +1100,7 @@ def send_companion_to_discord(entry):
     try:
         requests.post(DISCORD_WEBHOOK_SUGGESTIONS, json={"content": content}, timeout=10)
     except Exception as e:
-        print(f"❌ Error enviando companion a Discord: {e}")
+        log.error(f"Error enviando companion a Discord: {e}")
 
 @app.route('/api/companions', methods=['GET'])
 def api_companions_get():
@@ -1154,4 +1162,4 @@ if __name__ == '__main__':
     try:
         app.run(host='0.0.0.0', port=port)
     except KeyboardInterrupt:
-        print("\n👋 Script detenido manualmente. ¡Hasta pronto!")
+        log.info("Script detenido manualmente.")
