@@ -1267,6 +1267,7 @@
         for (const show of activeMusicals) {
           const m = MUSICALS[show.key]
           if (!m) continue
+          if (show.endDate && new Date(year, month, d) > new Date(show.endDate)) continue
           for (const session of sessions) {
             events.push({
               id: `${show.key}-${year}-${month}-${d}-${session.replace(':','')}`,
@@ -1690,7 +1691,7 @@
     // ── EN CARTELERA ─────────────────────────────────────────────────────────
     const CARTELERA = [
       { key:'wicked', name:'Wicked', region:'nacional', teatro:'Teatro Nuevo Alcalá, Madrid', precio:'Desde €24,45',
-        tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01', soon:false,
+        tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01', soon:false, endDate:'2026-05-24',
         reparto:[
           {rol:'Elphaba',        actor:'Cristina Picos',     foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Cristina_Picos-1.webp',    link:'https://www.instagram.com/crispicos/',               bio:'Actriz y músico con formación en flauta y teatro musical. Ha protagonizado Los Pilares de la Tierra, El médico y El tiempo entre costuras.'},
           {rol:'Glinda',         actor:'Cristina Llorente',  foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Cristina_Llorente-3.webp', link:'https://www.instagram.com/cristinallorenteoficial/', bio:'Formada en Londres y Madrid. Ha actuado en Pretty Woman, Ghost y El Rey León. Premio Broadway World 2020 como mejor actriz protagonista por Ghost.'},
@@ -1722,7 +1723,7 @@
         ]
       },
       { key:'lesmis', name:'Los Miserables', region:'nacional', teatro:'Teatro Apolo, Madrid', precio:'Desde €32',
-        tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01', soon:false,
+        tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01', soon:false, endDate:'2026-05-21',
         reparto:[
           {rol:'Jean Valjean',        actor:'Adrián Salzedo',       foto:'https://miserableselmusical.es/wp-content/uploads/2025/07/adrian_salzedo.webp',       link:'https://www.instagram.com/adriansalzedo/',         bio:'Actor, músico, cantante y bailarín madrileño. Debutó a los ocho años en La bella y la bestia. Premio Mejor Actor Protagonista en los Premios del Teatro Musical 2019 por El médico, el musical.'},
           {rol:'Javert',              actor:'Pitu Manubens',         foto:'https://miserableselmusical.es/wp-content/uploads/2025/06/pitu_manubens.webp',          link:'https://www.instagram.com/pitu_manubens/',         bio:'Actor multidisciplinar de Terrassa, formado en la ESAD de Barcelona. Ha protagonizado El rey León (Scar) y fue la voz del narrador en The Book of Mormon. Amplia trayectoria en doblaje de cine y series.'},
@@ -1760,7 +1761,7 @@
         ]
       },
       { key:'tbom', name:'Book of Mormon', region:'nacional', teatro:'Teatro Rialto, Madrid', precio:'Desde €25,50',
-        tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', soon:false,
+        tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', soon:false, endDate:'2026-05-31',
         reparto:[
           {rol:'Elder Price',       actor:'Alexandre Ars',      foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2024/06/Alexandre.webp',                    link:'https://www.instagram.com/alexandre___ars/',   bio:'Nacido en Guissona, formado en Aules Barcelona. Ha actuado en The Producers, La Jaula de Las Locas, Fama el musical, Carrie y RENT. Cofundador de Sus4 Companyia. Conocido por Tu Cara Me Suena y Operación Triunfo 2018.'},
           {rol:'Elder Cunningham',  actor:'Alejandro Mesa',     foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2023/05/alejandro-1.webp',                  link:'https://www.instagram.com/alejandrofmesa/',    bio:'Nacido en Tudela en 1999, debutó a los 12 años en Sonrisas y lágrimas. Ha actuado en La familia Addams. En TV: Estoy vivo y Cuéntame cómo pasó. En cine: Descarrilados y En los márgenes.'},
