@@ -1196,15 +1196,19 @@
   <script>
     // ── DATA ──────────────────────────────────────────────────────────────────
     const POSTERS = {
-      wicked:  '/static/ui/posters/wicked.jpg',
-      lesmis:  '/static/ui/posters/les-miserables.jpg',
-      tbom:    '/static/ui/posters/book_of_mormon.jpg',
+      wicked:      '/static/ui/posters/wicked.jpg',
+      lesmis:      '/static/ui/posters/les-miserables.jpg',
+      tbom:        '/static/ui/posters/book_of_mormon.jpg',
+      sitpwg:      'https://www.barbican.org.uk/sites/default/files/styles/hero_constrained_small/public/images/2026-01/sundayintheparkwithgeorge-web%26agentassets_2000%20x%201096_portraitTT.jpg',
+      asyoulikeit: 'https://cdn2.rsc.org.uk/sitefinity/images/productions/2026-shows/as-you-like-it/10094_feb26_playhub-news-images_ek.tmb-img-820.jpg',
     }
 
     const MUSICALS = {
       wicked:  { name:'Wicked',            color:'#7c3aed', light:'#ede9fe', cls:'ev-wicked',  tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01',  teatro:'Teatro Nuevo Alcalá, Madrid',  telegram:'https://t.me/wickedespana',    discord:null },
       lesmis:  { name:'Los Miserables',    color:'#dc2626', light:'#fee2e2', cls:'ev-lesmis',  tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01',    teatro:'Teatro Apolo, Madrid',         telegram:'https://t.me/losmiserableses', discord:null },
-      tbom:    { name:'Book of Mormon',    color:'#0891b2', light:'#cffafe', cls:'ev-tbom',    tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', teatro:'Teatro Rialto, Madrid',  telegram:'https://t.me/bookofmormones',  discord:null },
+      tbom:        { name:'Book of Mormon',              color:'#0891b2', light:'#cffafe', cls:'ev-tbom',        tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', teatro:'Teatro Rialto, Madrid',         telegram:'https://t.me/bookofmormones',  discord:null },
+      sitpwg:      { name:'Sunday in the Park w/ George', color:'#b45309', light:'#fef3c7', cls:'ev-sitpwg',      tickets:'https://www.barbican.org.uk/whats-on/event/2027/sunday-in-the-park-with-george',            teatro:'Barbican Centre, Londres',      telegram:null, discord:null },
+      asyoulikeit: { name:'As You Like It (RSC)',         color:'#15803d', light:'#dcfce7', cls:'ev-asyoulikeit', tickets:'https://secure.rsc.org.uk/events/as-you-like-it?startdate=2026-09-26&enddate=2026-11-07',   teatro:'Royal Shakespeare Theatre, Stratford-upon-Avon', telegram:null, discord:null },
     }
 
     // Horario estándar de musicales en Madrid:
@@ -1760,6 +1764,20 @@
           {rol:'Swing',             actor:'Javier Aguilera',    foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2023/05/Javier_Aguilera.webp',              link:'https://www.instagram.com/macachocaruzzo/',    bio:'Bailarín y compositor de Guantánamo, Cuba. Primer Solista de la Compañía Nacional de Danza Contemporánea de Cuba. Ha colaborado con Acosta Danza y con coreógrafos como Carlos Acosta y Sidi Larbi.'},
           {rol:'Swing',             actor:'Raimon Ferrer',      foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2024/07/Raimon_Ferrer.webp',                link:'https://www.instagram.com/raimonfrrr/',        bio:'Natural de Granollers, graduado en Teatro Musical en Aules Barcelona. Finalista en Oh Happy Day (TV3) con el grupo JARKS. Ha actuado en La familia Addams, Pretty Woman y creado el show Broadway A Cappella.'},
           {rol:'Swing',             actor:'Óscar Bustos',       foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2023/05/oscar_bustos-1.webp',               link:'https://www.instagram.com/oscarbustos.art/',   bio:'Actor, cantante y bailarín barcelonés formado en Coco Comín. Dos años en Disneyland París. Ha actuado en Gypsy (Antonio Banderas). Parte del elenco original de The Book of Mormon en el Teatro Calderón.'},
+        ]
+      },
+      { key:'sitpwg', name:'Sunday in the Park with George', teatro:'Barbican Centre, Londres', precio:'TBA',
+        tickets:'https://www.barbican.org.uk/whats-on/event/2027/sunday-in-the-park-with-george', soon:true,
+        reparto:[
+          {rol:'George',   actor:'Jonathan Bailey', foto:'', link:'https://www.instagram.com/jonathanbailey_official/', bio:'Actor británico conocido por Bridgerton y el film Wicked. Premio Olivier y nominado al Tony. Hace su debut en un musical de Sondheim.'},
+          {rol:'Dot',      actor:'Ariana Grande',   foto:'', link:'https://www.instagram.com/arianagrande/',            bio:'Cantante y actriz estadounidense. Conocida mundialmente por su carrera musical y por su papel de Glinda en la película Wicked (2024).'},
+        ]
+      },
+      { key:'asyoulikeit', name:'As You Like It', teatro:'Royal Shakespeare Theatre, Stratford-upon-Avon', precio:'TBA',
+        tickets:'https://secure.rsc.org.uk/events/as-you-like-it?startdate=2026-09-26&enddate=2026-11-07', soon:true,
+        reparto:[
+          {rol:'Rosalind', actor:'Jonathan Groff',  foto:'', link:'https://www.instagram.com/jongroff/',    bio:'Actor y cantante estadounidense, ganador del Tony Award por Bobby en Company. Conocido por Hamilton (Kangaroo Court recording), Looking (HBO) y Frozen (Kristoff). Debut en la RSC.'},
+          {rol:'Celia',    actor:'Fisayo Akinade',  foto:'', link:'https://www.instagram.com/fisayoakinade/', bio:'Actor británico de origen nigeriano. Conocido por series como Humans, Cucumber y Queer as Folk. Premio BAFTA a Mejor Actor de Reparto.'},
         ]
       },
     ]
