@@ -178,8 +178,8 @@ def send_telegram_alert(url, changes, timestamp, image_path):
 
 try:
     import pywhatkit as kit
-except Exception as e:
-    log.warning(f"pywhatkit import failed: {e}")
+except Exception:
+    kit = None  # solo funciona en local con navegador, se ignora en servidor
     kit = None
 
 whatsapp_numbers = [n for n in [
