@@ -420,13 +420,13 @@ def save_event(monitor_key, url, summary, changes):
         'tbom': 'The Book of Mormon', 'houdini': 'Houdini',
     }
     event = {
-        'id': f"{monitor_key}-{int(datetime.utcnow().timestamp())}",
+        'id': f"{monitor_key}-{int(datetime.now(timezone.utc).timestamp())}",
         'monitor_key': monitor_key,
         'musical': musical_names.get(monitor_key, monitor_key.title()),
         'title': summary or f"Cambio detectado en {musical_names.get(monitor_key, monitor_key.title())}",
         'summary': summary or "Se ha detectado un cambio en la web oficial.",
         'url': url,
-        'timestamp': datetime.utcnow().isoformat() + 'Z',
+        'timestamp': datetime.now(timezone.utc).isoformat(),
     }
     events = load_events()
     events.insert(0, event)
@@ -461,7 +461,7 @@ def notify_change(url, old_text, new_text):
     monitor_key = get_monitor_key_for_url(url) or 'general'
     try:
         entry = {
-            'timestamp': datetime.utcnow().isoformat() + 'Z',
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'url': url,
             'summary': summary or '',
             'changes': changes,
@@ -643,7 +643,7 @@ class Monitor:
                 time.sleep(1)
                 continue
 
-            self.last_run = datetime.utcnow().isoformat() + 'Z'
+            self.last_run = datetime.now(timezone.utc).isoformat()
             urls_to_check = [u for u in list(self.urls) if u not in disabled_urls]
 
             # Fetch todas las URLs en paralelo (max 3 simultáneas para no saturar servidores)
@@ -665,9 +665,16 @@ class Monitor:
 
                     consecutive_failures[url] = 0
 
-                    if old_contents.get(url) and content != old_contents.get(url):
-                        notify_change(url, old_contents.get(url), content)
+                    new_hash = hash_content(content)
+                    if old_hashes.get(url) and new_hash == old_hashes[url]:
+                        # Contenido idéntico — no hay nada que hacer
+                        continue
 
+                    if old_hashes.get(url):
+                        # Hash distinto = cambio real
+                        notify_change(url, old_contents.get(url, ''), content)
+
+                    old_hashes[url] = new_hash
                     old_contents[url] = content
 
             reenable_disabled_urls()
