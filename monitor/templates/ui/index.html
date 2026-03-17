@@ -128,17 +128,19 @@
     .hero-wrap {
       position: relative; overflow: hidden;
     }
-    .hero-wrap::before {
-      content: '';
+    .hero-video {
       position: absolute; inset: 0; z-index: 0;
-      background:
-        radial-gradient(ellipse 60% 70% at 80% 40%, rgba(124,58,237,0.08) 0%, transparent 70%),
-        radial-gradient(ellipse 50% 60% at 20% 70%, rgba(8,145,178,0.06) 0%, transparent 65%),
-        radial-gradient(ellipse 40% 50% at 60% 80%, rgba(220,38,38,0.05) 0%, transparent 60%);
+      width: 100%; height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+    .hero-overlay {
+      position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(135deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.38) 100%);
       pointer-events: none;
     }
     .hero {
-      position: relative; z-index: 1;
+      position: relative; z-index: 2;
       max-width: 1200px; margin: 0 auto;
       padding: 4rem 2rem 2rem;
       display: grid; grid-template-columns: 1fr 1fr;
@@ -153,6 +155,14 @@
       padding: 0.3rem 0.8rem; border-radius: 999px;
       margin-bottom: 1.25rem;
     }
+    /* Force white text in hero (always sits over dark video overlay) */
+    .hero-wrap .hero-tag { color: rgba(255,255,255,0.8); }
+    .hero-wrap .hero-title { color: #ffffff; }
+    .hero-wrap .hero-desc { color: rgba(255,255,255,0.75); }
+    .hero-wrap .btn-dark { background: rgba(255,255,255,0.95); color: #0f0e0c; }
+    .hero-wrap .btn-outline { color: #fff; border-color: rgba(255,255,255,0.5); }
+    .hero-wrap .btn-outline:hover { background: rgba(255,255,255,0.2); border-color: #fff; color: #fff; }
+
     .hero-title {
       font-family: 'Fraunces', serif;
       font-size: clamp(2.4rem, 5vw, 3.8rem);
@@ -913,6 +923,8 @@
 
   <!-- HERO -->
   <div class="hero-wrap">
+  <video class="hero-video" id="hero-video" autoplay muted playsinline></video>
+  <div class="hero-overlay"></div>
   <section class="hero fu">
     <div class="hero-text">
       <div class="hero-tag">🎭 Tu portal de musicales en España</div>
@@ -1992,6 +2004,32 @@
     }
 
     initSlideshow()
+  </script>
+
+  <script>
+    /* ── VIDEO HERO BACKGROUND ── */
+    (function () {
+      const videos = [
+        '/static/ui/videos/VIDEO1.mp4',
+        '/static/ui/videos/VIDEO2.mp4',
+        '/static/ui/videos/VIDEO3.mp4',
+        '/static/ui/videos/VIDEO4.mp4',
+        '/static/ui/videos/VIDEO5.webm',
+        '/static/ui/videos/VIDEO6.mp4',
+        '/static/ui/videos/VIDEO7.mp4',
+        '/static/ui/videos/VIDEO8.mp4',
+      ]
+      let idx = Math.floor(Math.random() * videos.length)
+      const vid = document.getElementById('hero-video')
+      if (!vid) return
+      function loadNext() {
+        vid.src = videos[idx]
+        vid.play().catch(() => {})
+        idx = (idx + 1) % videos.length
+      }
+      vid.addEventListener('ended', loadNext)
+      loadNext()
+    })()
   </script>
 </body>
 </html>
