@@ -233,12 +233,34 @@ async def notify_godot(url):
         await ws.send(f"UPDATE:{url}")
 
 import difflib
+import queue as _queue
 try:
     anthropic = importlib.import_module('anthropic')
 except Exception:
     anthropic = None
 
 old_contents = {url: "" for url in URLS}
+
+# ── Cola de notificaciones ────────────────────────────────────────────────────
+# El monitor encola (url, old, new); un worker dedicado las envía en orden.
+# Así las notificaciones nunca bloquean el loop ni se pierden si Telegram falla.
+_notif_queue: _queue.Queue = _queue.Queue()
+
+def _notification_worker():
+    while True:
+        try:
+            url, old_text, new_text = _notif_queue.get(timeout=1)
+            try:
+                notify_change(url, old_text, new_text)
+            except Exception as e:
+                print(f"❌ Error en worker de notificaciones: {e}")
+            finally:
+                _notif_queue.task_done()
+        except _queue.Empty:
+            continue
+
+_notif_thread = threading.Thread(target=_notification_worker, daemon=True, name="notif-worker")
+_notif_thread.start()
 
 # ── Claude summarizer ─────────────────────────────────────────────────────────
 _anthropic_client = None
@@ -671,8 +693,8 @@ class Monitor:
                         continue
 
                     if old_hashes.get(url):
-                        # Hash distinto = cambio real
-                        notify_change(url, old_contents.get(url, ''), content)
+                        # Hash distinto = cambio real — encolamos para no bloquear el loop
+                        _notif_queue.put((url, old_contents.get(url, ''), content))
 
                     old_hashes[url] = new_hash
                     old_contents[url] = content
