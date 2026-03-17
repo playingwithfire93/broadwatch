@@ -1107,7 +1107,51 @@ MUSICAL_NAMES = {
     'houdini': 'Houdini',
 }
 
+
+def _supabase_fetch_companions(musical=None):
+    now = datetime.now(timezone.utc).isoformat()
+    params = {'expires': f'gt.{now}', 'order': 'date.asc'}
+    if musical:
+        params['musical'] = f'eq.{musical}'
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/companions",
+            headers=_supabase_headers(),
+            params=params,
+            timeout=5,
+        )
+        if r.ok:
+            return r.json()
+        log.warning(f"Supabase companions fetch failed: {r.status_code} {r.text[:200]}")
+    except Exception as e:
+        log.warning(f"Supabase companions fetch error: {e}")
+    return None
+
+
+def _supabase_insert_companion(entry):
+    try:
+        r = requests.post(
+            f"{SUPABASE_URL}/rest/v1/companions",
+            headers={**_supabase_headers(), 'Prefer': 'return=minimal'},
+            json=entry,
+            timeout=5,
+        )
+        if r.status_code in (200, 201):
+            log.info(f"Companion guardado en Supabase: {entry.get('id')}")
+            return True
+        log.error(f"Supabase companion insert failed: {r.status_code} {r.text[:200]}")
+    except Exception as e:
+        log.error(f"Supabase companion insert error: {e}")
+    return False
+
+
 def load_companions():
+    # Supabase primero (producción)
+    if SUPABASE_URL and SUPABASE_ANON_KEY:
+        data = _supabase_fetch_companions()
+        if data is not None:
+            return data
+    # Fallback: archivo local (desarrollo)
     if COMPANIONS_FILE.exists():
         try:
             data = json.loads(COMPANIONS_FILE.read_text(encoding='utf-8'))
@@ -1117,7 +1161,9 @@ def load_companions():
             pass
     return []
 
+
 def save_companions(companions):
+    """Solo se usa como fallback local; en producción se usa _supabase_insert_companion."""
     try:
         COMPANIONS_FILE.write_text(json.dumps(companions, ensure_ascii=False, indent=2), encoding='utf-8')
     except Exception as e:
@@ -1144,10 +1190,13 @@ def send_companion_to_discord(entry):
 @app.route('/api/companions', methods=['GET'])
 def api_companions_get():
     musical = request.args.get('musical', '')
-    companions = load_companions()
-    if musical:
-        companions = [c for c in companions if c.get('musical') == musical]
-    companions.sort(key=lambda c: c.get('date', ''), reverse=False)
+    if SUPABASE_URL and SUPABASE_ANON_KEY:
+        companions = _supabase_fetch_companions(musical=musical or None) or []
+    else:
+        companions = load_companions()
+        if musical:
+            companions = [c for c in companions if c.get('musical') == musical]
+        companions.sort(key=lambda c: c.get('date', ''), reverse=False)
     return jsonify(companions)
 
 @app.route('/api/companions', methods=['POST'])
@@ -1187,9 +1236,12 @@ def api_companions_post():
         'expires':      expires_iso,
     }
 
-    companions = load_companions()
-    companions.insert(0, entry)
-    save_companions(companions)
+    if SUPABASE_URL and SUPABASE_ANON_KEY:
+        _supabase_insert_companion(entry)
+    else:
+        companions = load_companions()
+        companions.insert(0, entry)
+        save_companions(companions)
 
     threading.Thread(target=send_companion_to_discord, args=(entry,), daemon=True).start()
 
