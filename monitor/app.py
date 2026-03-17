@@ -57,7 +57,8 @@ RETRY_BACKOFF = {url: 30 for url in URLS}  # Initial retry delay (in seconds)
 # fall back to BROADWATCH_* names for backwards compatibility.
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN') or os.environ.get('BROADWATCH_TELEGRAM_TOKEN', '')
 CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID') or os.environ.get('BROADWATCH_TELEGRAM_CHAT_ID', '')
-DISCORD_WEBHOOK = os.environ.get('BROADWATCH_DISCORD_WEBHOOK', '')
+DISCORD_WEBHOOK = (os.environ.get('BROADWATCH_DISCORD_WEBHOOK')
+                   or os.environ.get('BROADWATCH_DISCORD_ALERT', ''))
 DISCORD_WEBHOOK_SUGGESTIONS = os.environ.get('BROADWATCH_DISCORD_SUGGESTIONS', '') or DISCORD_WEBHOOK
 
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '').rstrip('/')
