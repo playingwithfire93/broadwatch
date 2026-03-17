@@ -60,6 +60,9 @@ CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID') or os.environ.get('BROADWATCH_TELEG
 DISCORD_WEBHOOK = os.environ.get('BROADWATCH_DISCORD_WEBHOOK', '')
 DISCORD_WEBHOOK_SUGGESTIONS = os.environ.get('BROADWATCH_DISCORD_SUGGESTIONS', '') or DISCORD_WEBHOOK
 
+SUPABASE_URL = os.environ.get('SUPABASE_URL', '').rstrip('/')
+SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY', '')
+
 # Twilio (recommended: move to env vars)
 
 # Diccionario que asocia URL o musical con su sonido y su imagen
@@ -400,16 +403,66 @@ def find_differences(old_text, new_text):
     diff = difflib.unified_diff(old_text.splitlines(), new_text.splitlines(), lineterm="")
     return "\n".join(diff)
 
-# Fichero donde se persisten los eventos visibles en la web
+# Fichero donde se persisten los eventos visibles en la web (fallback local)
 EVENTS_FILE = Path(BASE_DIR) / 'events.json'
 MAX_EVENTS = 50
 _events_cache = None  # in-memory cache; None means not yet loaded
+
+
+# ── Supabase helpers ──────────────────────────────────────────────────────────
+
+def _supabase_headers():
+    return {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': f'Bearer {SUPABASE_ANON_KEY}',
+        'Content-Type': 'application/json',
+    }
+
+
+def _supabase_fetch_events(limit=MAX_EVENTS):
+    try:
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/events",
+            headers=_supabase_headers(),
+            params={'order': 'timestamp.desc', 'limit': limit},
+            timeout=5,
+        )
+        if r.ok:
+            return r.json()
+        log.warning(f"Supabase fetch failed: {r.status_code} {r.text[:200]}")
+    except Exception as e:
+        log.warning(f"Supabase fetch error: {e}")
+    return None
+
+
+def _supabase_insert_event(event):
+    try:
+        r = requests.post(
+            f"{SUPABASE_URL}/rest/v1/events",
+            headers={**_supabase_headers(), 'Prefer': 'return=minimal'},
+            json=event,
+            timeout=5,
+        )
+        if r.status_code in (200, 201):
+            log.info(f"Evento guardado en Supabase: {event.get('title')}")
+            return True
+        log.error(f"Supabase insert failed: {r.status_code} {r.text[:200]}")
+    except Exception as e:
+        log.error(f"Supabase insert error: {e}")
+    return False
 
 
 def load_events():
     global _events_cache
     if _events_cache is not None:
         return list(_events_cache)
+    # Supabase primero (producción)
+    if SUPABASE_URL and SUPABASE_ANON_KEY:
+        data = _supabase_fetch_events()
+        if data is not None:
+            _events_cache = data
+            return list(data)
+    # Fallback: archivo local (desarrollo)
     if EVENTS_FILE.exists():
         try:
             _events_cache = json.loads(EVENTS_FILE.read_text(encoding='utf-8'))
@@ -420,8 +473,8 @@ def load_events():
     return []
 
 
-def save_event(monitor_key, url, summary, changes):
-    """Guarda un evento legible en events.json para mostrarlo en la web."""
+def save_event(monitor_key, url, summary, changes):  # noqa: ARG001
+    """Guarda un evento en Supabase (o en archivo local como fallback)."""
     global _events_cache
     musical_names = {
         'wicked': 'Wicked', 'les_mis': 'Los Miserables',
@@ -436,15 +489,24 @@ def save_event(monitor_key, url, summary, changes):
         'url': url,
         'timestamp': datetime.now(timezone.utc).isoformat(),
     }
-    events = load_events()
-    events.insert(0, event)
-    events = events[:MAX_EVENTS]
-    _events_cache = events  # update cache before writing to disk
-    try:
-        EVENTS_FILE.write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding='utf-8')
-        log.info(f"Evento guardado: {event['title']}")
-    except Exception as e:
-        log.error(f"Error guardando evento: {e}")
+    if SUPABASE_URL and SUPABASE_ANON_KEY:
+        _supabase_insert_event(event)
+        # Actualizar caché en memoria sin volver a hacer fetch
+        if _events_cache is None:
+            _events_cache = []
+        _events_cache.insert(0, event)
+        _events_cache = _events_cache[:MAX_EVENTS]
+    else:
+        # Fallback local
+        events = load_events()
+        events.insert(0, event)
+        events = events[:MAX_EVENTS]
+        _events_cache = events
+        try:
+            EVENTS_FILE.write_text(json.dumps(events, ensure_ascii=False, indent=2), encoding='utf-8')
+            log.info(f"Evento guardado localmente: {event['title']}")
+        except Exception as e:
+            log.error(f"Error guardando evento: {e}")
     return event
 
 
