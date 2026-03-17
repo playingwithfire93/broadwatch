@@ -1645,7 +1645,7 @@
       const saved = localStorage.getItem('bw_theme')
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
       const isDark = saved ? saved === 'dark' : false
-      if (isDark) document.documentElement.setAttribute('data-theme', 'dark')
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
       const btn = document.getElementById('theme-toggle')
       function syncIcon() {
         btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙'
