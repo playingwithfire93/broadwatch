@@ -247,7 +247,8 @@
       height: 100%;
       cursor: pointer;
     }
-    .cartelera-card:hover { transform: translateY(-6px) scale(1.01); box-shadow: var(--shadow-lg); }
+    .cartelera-card:hover,
+    .cartelera-card.touch-active { transform: translateY(-6px) scale(1.01); box-shadow: var(--shadow-lg); }
     .cartelera-card.is-soon { cursor: default; }
     .cartelera-poster {
       width: 100%; aspect-ratio: 2/3;
@@ -2004,6 +2005,26 @@
     }
 
     initSlideshow()
+  </script>
+
+  <script>
+    /* ── TOUCH: primer tap = hover visual, segundo tap = acción ── */
+    if ('ontouchstart' in window) {
+      document.addEventListener('touchstart', (e) => {
+        const card = e.target.closest('.cartelera-card[data-ticket]')
+        const active = document.querySelectorAll('.cartelera-card.touch-active')
+        if (!card) {
+          active.forEach(c => c.classList.remove('touch-active'))
+          return
+        }
+        if (!card.classList.contains('touch-active')) {
+          e.preventDefault()
+          active.forEach(c => c.classList.remove('touch-active'))
+          card.classList.add('touch-active')
+        }
+        // segundo tap: deja pasar el click normalmente
+      }, { passive: false })
+    }
   </script>
 
   <script>
