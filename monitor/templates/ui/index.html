@@ -209,6 +209,17 @@
     .pill-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 
     /* ── EN CARTELERA ── */
+    .cartelera-region { margin-bottom: 2rem; }
+    .cartelera-region-title {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      margin-bottom: .75rem;
+      padding-bottom: .4rem;
+      border-bottom: 1px solid var(--border);
+    }
     .cartelera-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -939,7 +950,7 @@
       <h2>En cartelera</h2>
       <div class="rule"></div>
     </div>
-    <div class="cartelera-grid fu fu2" id="cartelera-grid"></div>
+    <div id="cartelera-container"></div>
   </section>
 
   <!-- PRÓXIMAMENTE -->
@@ -1665,7 +1676,7 @@
 
     // ── EN CARTELERA ─────────────────────────────────────────────────────────
     const CARTELERA = [
-      { key:'wicked', name:'Wicked', teatro:'Teatro Nuevo Alcalá, Madrid', precio:'Desde €24,45',
+      { key:'wicked', name:'Wicked', region:'nacional', teatro:'Teatro Nuevo Alcalá, Madrid', precio:'Desde €24,45',
         tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01', soon:false,
         reparto:[
           {rol:'Elphaba',        actor:'Cristina Picos',     foto:'https://wickedelmusical.com/wp-content/uploads/2025/06/Cristina_Picos-1.webp',    link:'https://www.instagram.com/crispicos/',               bio:'Actriz y músico con formación en flauta y teatro musical. Ha protagonizado Los Pilares de la Tierra, El médico y El tiempo entre costuras.'},
@@ -1697,7 +1708,7 @@
           {rol:'Swing',          actor:'Óscar Muñoz',        foto:'/static/Oscar_Munioz.webp',                                                          link:'https://www.instagram.com/osscarml/',               bio:'Graduado en Comedia musical en Coco Comín y en danza contemporánea en Àrea espai de dansa i creació. En 2022 debuta en Mamma Mia! como Swing, Alternante de Eddie y Cover de Pepper. Ha participado como bailarín en la película Voy a pasármelo mejor.'},
         ]
       },
-      { key:'lesmis', name:'Los Miserables', teatro:'Teatro Apolo, Madrid', precio:'Desde €32',
+      { key:'lesmis', name:'Los Miserables', region:'nacional', teatro:'Teatro Apolo, Madrid', precio:'Desde €32',
         tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01', soon:false,
         reparto:[
           {rol:'Jean Valjean',        actor:'Adrián Salzedo',       foto:'https://miserableselmusical.es/wp-content/uploads/2025/07/adrian_salzedo.webp',       link:'https://www.instagram.com/adriansalzedo/',         bio:'Actor, músico, cantante y bailarín madrileño. Debutó a los ocho años en La bella y la bestia. Premio Mejor Actor Protagonista en los Premios del Teatro Musical 2019 por El médico, el musical.'},
@@ -1735,7 +1746,7 @@
           {rol:'Swing',               actor:'Adrián Quiles Arias',   foto:'',                                                                                       link:'https://www.instagram.com/adrian.quiles/',         bio:'Formado en SCAENA e ICMT (Londres). Ha actuado en El jovencito Frankenstein y Pretty Woman (cover Edward Lewis y Alfredo). Dos años en la gira de Symphonic Rhapsody of Queen. También en ópera y zarzuela.'},
         ]
       },
-      { key:'tbom', name:'Book of Mormon', teatro:'Teatro Rialto, Madrid', precio:'Desde €25,50',
+      { key:'tbom', name:'Book of Mormon', region:'nacional', teatro:'Teatro Rialto, Madrid', precio:'Desde €25,50',
         tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', soon:false,
         reparto:[
           {rol:'Elder Price',       actor:'Alexandre Ars',      foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2024/06/Alexandre.webp',                    link:'https://www.instagram.com/alexandre___ars/',   bio:'Nacido en Guissona, formado en Aules Barcelona. Ha actuado en The Producers, La Jaula de Las Locas, Fama el musical, Carrie y RENT. Cofundador de Sus4 Companyia. Conocido por Tu Cara Me Suena y Operación Triunfo 2018.'},
@@ -1766,14 +1777,14 @@
           {rol:'Swing',             actor:'Óscar Bustos',       foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2023/05/oscar_bustos-1.webp',               link:'https://www.instagram.com/oscarbustos.art/',   bio:'Actor, cantante y bailarín barcelonés formado en Coco Comín. Dos años en Disneyland París. Ha actuado en Gypsy (Antonio Banderas). Parte del elenco original de The Book of Mormon en el Teatro Calderón.'},
         ]
       },
-      { key:'sitpwg', name:'Sunday in the Park with George', teatro:'Barbican Centre, Londres', precio:'TBA',
+      { key:'sitpwg', name:'Sunday in the Park with George', region:'internacional', teatro:'Barbican Centre, Londres', precio:'TBA',
         tickets:'https://www.barbican.org.uk/whats-on/event/2027/sunday-in-the-park-with-george', soon:true,
         reparto:[
           {rol:'George',   actor:'Jonathan Bailey', foto:'', link:'https://www.instagram.com/jonathanbailey_official/', bio:'Actor británico conocido por Bridgerton y el film Wicked. Premio Olivier y nominado al Tony. Hace su debut en un musical de Sondheim.'},
           {rol:'Dot',      actor:'Ariana Grande',   foto:'', link:'https://www.instagram.com/arianagrande/',            bio:'Cantante y actriz estadounidense. Conocida mundialmente por su carrera musical y por su papel de Glinda en la película Wicked (2024).'},
         ]
       },
-      { key:'asyoulikeit', name:'As You Like It', teatro:'Royal Shakespeare Theatre, Stratford-upon-Avon', precio:'TBA',
+      { key:'asyoulikeit', name:'As You Like It', region:'internacional', teatro:'Royal Shakespeare Theatre, Stratford-upon-Avon', precio:'TBA',
         tickets:'https://secure.rsc.org.uk/events/as-you-like-it?startdate=2026-09-26&enddate=2026-11-07', soon:true,
         reparto:[
           {rol:'Rosalind', actor:'Jonathan Groff',  foto:'', link:'https://www.instagram.com/jongroff/',    bio:'Actor y cantante estadounidense, ganador del Tony Award por Bobby en Company. Conocido por Hamilton (Kangaroo Court recording), Looking (HBO) y Frozen (Kristoff). Debut en la RSC.'},
@@ -1794,8 +1805,9 @@
     }
 
     function renderCartelera() {
-      const grid = document.getElementById('cartelera-grid')
-      grid.innerHTML = CARTELERA.map((show, i) => {
+      const container = document.getElementById('cartelera-container')
+
+      function renderCard(show, i) {
         const m = MUSICALS[show.key]
         const poster = POSTERS[show.key]
         const days = show.soon ? null : nextFunctionDays(show.key)
@@ -1852,10 +1864,22 @@
             ${cta}
           </div>
         </article>`
-      }).join('')
+      }
+
+      const grupos = [
+        { label: 'España', shows: CARTELERA.filter(s => s.region === 'nacional') },
+        { label: 'West End', shows: CARTELERA.filter(s => s.region === 'internacional') },
+      ].filter(g => g.shows.length)
+
+      container.innerHTML = grupos.map(g => `
+        <div class="cartelera-region">
+          <h3 class="cartelera-region-title">${g.label}</h3>
+          <div class="cartelera-grid">${g.shows.map((s, i) => renderCard(s, i)).join('')}</div>
+        </div>
+      `).join('')
 
       // Keep the full-card click behavior without nesting links inside links.
-      grid.querySelectorAll('.cartelera-card[data-ticket]').forEach((card) => {
+      container.querySelectorAll('.cartelera-card[data-ticket]').forEach((card) => {
         const openTicket = () => {
           const url = card.getAttribute('data-ticket')
           if (!url || url === '#') return
