@@ -15,27 +15,19 @@ try:
     from plyer import notification
 except Exception:
     notification = None
-import webbrowser
 try:
     import winsound
 except Exception:
-    # winsound is Windows-only; provide a safe no-op fallback for POSIX environments
     class _WinsoundFallback:
         SND_FILENAME = 0
         SND_ASYNC = 0
         @staticmethod
-        def PlaySound(*args, **kwargs):
-            # No-op on non-Windows platforms
+        def PlaySound(*_args, **_kwargs):
             return None
-
     winsound = _WinsoundFallback()
-from telegram import Bot
-import asyncio
-import sys
 from urllib3.util.retry import Retry
 from flask import Flask, request, jsonify, redirect, render_template, Response
 import os
-from twilio.rest import Client
 import json
 import threading
 from datetime import datetime, timezone
@@ -69,8 +61,6 @@ DISCORD_WEBHOOK = os.environ.get('BROADWATCH_DISCORD_WEBHOOK', '')
 DISCORD_WEBHOOK_SUGGESTIONS = os.environ.get('BROADWATCH_DISCORD_SUGGESTIONS', '') or DISCORD_WEBHOOK
 
 # Twilio (recommended: move to env vars)
-account_sid = os.environ.get('BROADWATCH_TWILIO_SID', '')
-auth_token = os.environ.get('BROADWATCH_TWILIO_TOKEN', '')
 
 # Diccionario que asocia URL o musical con su sonido y su imagen
 alerts_data = {
@@ -103,12 +93,6 @@ alerts_data = {
     }
 }
 
-client = None
-if account_sid and auth_token:
-    try:
-        client = Client(account_sid, auth_token)
-    except Exception:
-        client = None
 
 # Initialize state
 old_hashes = {url: '' for url in URLS}
@@ -233,12 +217,6 @@ def send_discord_alert(url, changes, image_path=None):
             log.error(f"Discord webhook returned {resp.status_code}: {resp.text}")
     except Exception as e:
         log.error(f"Failed to send Discord alert: {e}")
-
-import websockets
-
-async def notify_godot(url):
-    async with websockets.connect("ws://localhost:8765") as ws:
-        await ws.send(f"UPDATE:{url}")
 
 import difflib
 import queue as _queue
@@ -919,7 +897,6 @@ def api_env():
         'telegram_token_set': bool(TELEGRAM_TOKEN),
         'telegram_chat_id_set': bool(CHAT_ID),
         'discord_webhook_set': bool(DISCORD_WEBHOOK),
-        'twilio_configured': bool(account_sid and auth_token)
     })
 
 
