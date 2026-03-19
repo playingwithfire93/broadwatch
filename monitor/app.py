@@ -267,7 +267,8 @@ def _get_anthropic_client():
 
 
 def summarize_diff(url, diff_text):
-    """Llama a Claude para resumir un diff en lenguaje humano en español."""
+    """Llama a Claude para generar título y descripción del cambio en español.
+    Devuelve {'title': str, 'description': str} o None si falla."""
     client = _get_anthropic_client()
     if not client:
         log.warning("ANTHROPIC_API_KEY no configurada — usando resumen genérico")
@@ -278,23 +279,24 @@ def summarize_diff(url, diff_text):
         "Eres el asistente de una web de seguimiento de musicales en España.\n"
         f"Se ha detectado un cambio en: {url}\n\n"
         f"Diff detectado:\n{truncated}\n\n"
-        "Resume en UNA sola frase en español, clara y para fans de musicales, qué ha cambiado.\n"
-        "Ejemplos: \'Se han actualizado los precios de Wicked\' / "
-        "\'Nueva fecha para Los Miserables en abril\' / "
-        "\'Cambio en el elenco de The Book of Mormon\'\n"
-        "Responde SOLO con la frase, sin puntos ni comillas."
+        "Genera un título corto (máx 8 palabras) y una descripción más detallada (2-3 frases) "
+        "en español, claros y para fans de musicales, explicando qué ha cambiado.\n"
+        "Responde ÚNICAMENTE con JSON válido, sin markdown, con este formato exacto:\n"
+        "{\"title\": \"...\", \"description\": \"...\"}"
     )
     try:
         message = client.messages.create(
             model="claude-haiku-4-5-20251001",
-            max_tokens=120,
+            max_tokens=300,
             messages=[{"role": "user", "content": prompt}]
         )
-        summary = message.content[0].text.strip().strip('"').strip("'")
-        log.info(f"Resumen generado: {summary}")
-        
-        
-        return summary
+        raw = message.content[0].text.strip()
+        result = json.loads(raw)
+        title = result.get('title', '').strip().strip('"')
+        description = result.get('description', '').strip().strip('"')
+        log.info(f"Título generado: {title}")
+        log.info(f"Descripción generada: {description}")
+        return {'title': title, 'description': description}
     except Exception as e:
         log.warning(f"Error llamando a Claude: {e}")
         return None
@@ -475,18 +477,26 @@ def load_events():
 
 
 def save_event(monitor_key, url, summary, changes):  # noqa: ARG001
-    """Guarda un evento en Supabase (o en archivo local como fallback)."""
+    """Guarda un evento en Supabase (o en archivo local como fallback).
+    summary puede ser None o un dict {'title': str, 'description': str}."""
     global _events_cache
     musical_names = {
         'wicked': 'Wicked', 'les_mis': 'Los Miserables',
         'tbom': 'The Book of Mormon', 'houdini': 'Houdini',
     }
+    show_name = musical_names.get(monitor_key, monitor_key.title())
+    if isinstance(summary, dict):
+        title = summary.get('title') or f"Cambio detectado en {show_name}"
+        description = summary.get('description') or "Se ha detectado un cambio en la web oficial."
+    else:
+        title = summary or f"Cambio detectado en {show_name}"
+        description = summary or "Se ha detectado un cambio en la web oficial."
     event = {
         'id': f"{monitor_key}-{int(datetime.now(timezone.utc).timestamp())}",
         'monitor_key': monitor_key,
-        'musical': musical_names.get(monitor_key, monitor_key.title()),
-        'title': summary or f"Cambio detectado en {musical_names.get(monitor_key, monitor_key.title())}",
-        'summary': summary or "Se ha detectado un cambio en la web oficial.",
+        'musical': show_name,
+        'title': title,
+        'summary': description,
         'url': url,
         'timestamp': datetime.now(timezone.utc).isoformat(),
     }
@@ -518,7 +528,9 @@ def notify_change(url, old_text, new_text):
     summary = summarize_diff(url, changes)
 
     # 2. Notificacion de escritorio (solo en local con plyer disponible)
-    short_msg = (summary or f"Cambio en {url}")[:250]
+    alert_title = (summary.get('title') if isinstance(summary, dict) else summary) or f"Cambio en {url}"
+    alert_desc  = (summary.get('description') if isinstance(summary, dict) else summary) or changes
+    short_msg = alert_title[:250]
     if notification:
         try:
             notification.notify(title="Novedades BroadWatch", message=short_msg, timeout=10)
@@ -526,7 +538,8 @@ def notify_change(url, old_text, new_text):
             pass
 
     log.info(f"Cambio detectado en {url}")
-    log.info(f"Resumen: {summary or '(sin resumen)'}")
+    log.info(f"Título: {alert_title}")
+    log.info(f"Descripción: {alert_desc[:200]}")
 
     # 3. Guardar en logs tecnicos y en events.json para la web
     monitor_key = get_monitor_key_for_url(url) or 'general'
@@ -534,7 +547,7 @@ def notify_change(url, old_text, new_text):
         entry = {
             'timestamp': datetime.now(timezone.utc).isoformat(),
             'url': url,
-            'summary': summary or '',
+            'summary': alert_title,
             'changes': changes,
         }
         LOG_MANAGER.add(monitor_key, entry)
@@ -550,11 +563,10 @@ def notify_change(url, old_text, new_text):
     except Exception:
         pass
 
-    alert_text = summary or changes
-    send_telegram_alert(url, alert_text, time.strftime("%Y-%m-%d %H:%M:%S"), image_path)
+    send_telegram_alert(url, f"{alert_title}\n\n{alert_desc}", time.strftime("%Y-%m-%d %H:%M:%S"), image_path)
     for number in whatsapp_numbers:
-        send_whatsapp_alert(number, url, alert_text)
-    send_discord_alert(url, alert_text, image_path)
+        send_whatsapp_alert(number, url, alert_title)
+    send_discord_alert(url, f"{alert_title}\n\n{alert_desc}", image_path)
 
 
 def get_page_content(url):
