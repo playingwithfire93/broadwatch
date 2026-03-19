@@ -484,6 +484,13 @@ def save_event(monitor_key, url, summary, changes):  # noqa: ARG001
         'wicked': 'Wicked', 'les_mis': 'Los Miserables',
         'tbom': 'The Book of Mormon', 'houdini': 'Houdini',
     }
+    musical_images = {
+        'wicked':  '/static/ui/posters/wicked.jpg',
+        'les_mis': '/static/ui/posters/les-miserables.jpg',
+        'tbom':    '/static/ui/posters/book_of_mormon.jpg',
+        'addams':  '/static/ui/images/ADDAMS_MUPI_1080x1920.png',
+        'six':     '/static/ui/images/TEATRO-MADRID-SIX-EL-MUSICAL-cartel.jpg',
+    }
     show_name = musical_names.get(monitor_key, monitor_key.title())
     if isinstance(summary, dict):
         title = summary.get('title') or f"Cambio detectado en {show_name}"
@@ -498,6 +505,7 @@ def save_event(monitor_key, url, summary, changes):  # noqa: ARG001
         'title': title,
         'summary': description,
         'url': url,
+        'image': musical_images.get(monitor_key, ''),
         'timestamp': datetime.now(timezone.utc).isoformat(),
     }
     if SUPABASE_URL and SUPABASE_ANON_KEY:

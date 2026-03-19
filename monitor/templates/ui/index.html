@@ -1449,9 +1449,9 @@
       document.getElementById('news-count').textContent = data.length + ' noticias'
       grid.innerHTML = data.map((n, i) => {
         const m = MUSICALS[n.musical] || { color:'#059669', light:'#d1fae5', name: n.musical }
-        const poster = POSTERS[n.musical] || ''
+        const poster = n.image || POSTERS[n.monitor_key] || POSTERS[n.musical] || ''
         const imgHtml = poster
-          ? `<img class="news-card-img" src="${poster}" alt="${m.name}" loading="lazy">`
+          ? `<img class="news-card-img" src="${poster}" alt="${m.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">`
           : `<div class="news-card-img" style="background:${m.light}"></div>`
         return `
         <a class="news-card fu" href="${n.url || '#'}" style="animation-delay:${i*.07}s">
