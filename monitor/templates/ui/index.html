@@ -220,6 +220,16 @@
 
     /* ── EN CARTELERA ── */
     .cartelera-region { margin-bottom: 2rem; }
+    .cartelera-soon-divider {
+      font-size: .75rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--ink3);
+      display: flex; align-items: center; gap: .75rem;
+      margin: 1.5rem 0 1rem;
+    }
+    .cartelera-soon-divider::before,
+    .cartelera-soon-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
     .cartelera-region-title {
       font-size: 1rem;
       font-weight: 600;
@@ -906,7 +916,6 @@
       </a>
       <div class="nav-links">
         <a href="#novedades" class="nav-link">Novedades</a>
-        <a href="#proximamente" class="nav-link">Próximamente</a>
         <a href="#calendario" class="nav-link">Calendario</a>
         <a href="#buscaplan" class="nav-link">Busca Plan</a>
         <a href="#sugerencias" class="nav-link">Sugerencias</a>
@@ -964,15 +973,6 @@
       <div class="rule"></div>
     </div>
     <div id="cartelera-container"></div>
-  </section>
-
-  <!-- PRÓXIMAMENTE -->
-  <section class="section" id="proximamente" style="margin-top:3.5rem;">
-    <div class="section-hd fu fu1">
-      <h2>Próximamente</h2>
-      <div class="rule"></div>
-    </div>
-    <div class="proximamente-grid fu fu2" id="proximamente-grid"></div>
   </section>
 
   <!-- NOVEDADES -->
@@ -1235,6 +1235,8 @@
       tbom:        { name:'Book of Mormon',               color:'#0891b2', light:'#cffafe', cls:'ev-tbom',        tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01',                                                    teatro:'Teatro Rialto, Madrid',                          telegram:'https://t.me/bookofmormones',  discord:null },
       addams:      { name:'La Familia Addams',            color:'#1e1b4b', light:'#e0e7ff', cls:'ev-addams',      tickets:'https://tickets.oneboxtds.com/teatro-calderon/events/53692?sessionView=LIST',                                                                   teatro:'Teatro Calderón, Madrid',                        telegram:null, discord:null },
       six:         { name:'Six',                          color:'#be185d', light:'#fce7f3', cls:'ev-six',         tickets:'https://sixelmusical.entradas.plus/entradas/es/entradas_SIX',                                                                             teatro:'Teatro Gran Vía, Madrid',                        telegram:null, discord:null },
+      houdini:     { name:'Houdini',                      color:'#d97706', light:'#fef3c7', cls:'ev-houdini',     tickets:'#',                                                                                                                                              teatro:'Madrid',                                         telegram:null, discord:null },
+      qeh:         { name:'Querido Evan Hansen',           color:'#0369a1', light:'#e0f2fe', cls:'ev-qeh',         tickets:'#',                                                                                                                                              teatro:'Teatro Rialto, Madrid',                          telegram:null, discord:null },
       sitpwg:      { name:'Sunday in the Park w/ George', color:'#b45309', light:'#fef3c7', cls:'ev-sitpwg',      tickets:'https://www.barbican.org.uk/whats-on/event/2027/sunday-in-the-park-with-george',                                                               teatro:'Barbican Centre, Londres',                       telegram:null, discord:null },
       asyoulikeit: { name:'As You Like It (RSC)',          color:'#15803d', light:'#dcfce7', cls:'ev-asyoulikeit', tickets:'https://secure.rsc.org.uk/events/as-you-like-it?startdate=2026-09-26&enddate=2026-11-07',                                                      teatro:'Royal Shakespeare Theatre, Stratford-upon-Avon', telegram:null, discord:null },
     }
@@ -1820,6 +1822,10 @@
         skipDates:['2026-10-13'],
         reparto:[]
       },
+      { key:'houdini', name:'Houdini', region:'nacional', teatro:'Madrid', precio:'TBD',
+        tickets:'#', soon:true, reparto:[] },
+      { key:'qeh', name:'Querido Evan Hansen', region:'nacional', teatro:'Teatro Rialto, Madrid', precio:'TBD',
+        tickets:'#', soon:true, reparto:[] },
       { key:'sitpwg', name:'Sunday in the Park with George', region:'internacional', teatro:'Barbican Centre, Londres', precio:'TBA',
         tickets:'https://www.barbican.org.uk/whats-on/event/2027/sunday-in-the-park-with-george', soon:true,
         reparto:[
@@ -1909,15 +1915,31 @@
         </article>`
       }
 
+      const nacionales = CARTELERA.filter(s => s.region === 'nacional')
+      const internacionales = CARTELERA.filter(s => s.region === 'internacional')
+
+      function renderNacionales() {
+        const hoy = new Date(); hoy.setHours(0,0,0,0)
+        const esProximo = s => s.soon || (s.startDate && new Date(s.startDate) > hoy)
+        const activos = nacionales.filter(s => !esProximo(s))
+        const proximos = nacionales.filter(s => esProximo(s))
+        let html = `<div class="cartelera-grid">${activos.map((s, i) => renderCard(s, i)).join('')}</div>`
+        if (proximos.length) {
+          html += `<div class="cartelera-soon-divider">Próximamente</div>`
+          html += `<div class="cartelera-grid">${proximos.map((s, i) => renderCard(s, i)).join('')}</div>`
+        }
+        return html
+      }
+
       const grupos = [
-        { label: 'España', shows: CARTELERA.filter(s => s.region === 'nacional') },
-        { label: 'West End', shows: CARTELERA.filter(s => s.region === 'internacional') },
-      ].filter(g => g.shows.length)
+        { label: 'España', html: renderNacionales() },
+        { label: 'West End', html: `<div class="cartelera-grid">${internacionales.map((s, i) => renderCard(s, i)).join('')}</div>` },
+      ].filter(g => g.html)
 
       container.innerHTML = grupos.map(g => `
         <div class="cartelera-region">
           <h3 class="cartelera-region-title">${g.label}</h3>
-          <div class="cartelera-grid">${g.shows.map((s, i) => renderCard(s, i)).join('')}</div>
+          ${g.html}
         </div>
       `).join('')
 
@@ -1942,34 +1964,7 @@
     }
 
     // ── INIT ─────────────────────────────────────────────────────────────────
-    // ── PRÓXIMAMENTE ─────────────────────────────────────────────────────────
-    const PROXIMAMENTE = [
-      { emoji:'🎩', name:'Houdini',  color:'#d97706', light:'#fef3c7',
-        status:'Confirmado', statusBg:'#fef3c7', statusColor:'#d97706',
-        desc:'Teatro y fecha por confirmar. Madrid, 2026.' },
-      { emoji:'🕯️', name:'Rent',    color:'#dc2626', light:'#fee2e2',
-        status:'Sin confirmar', statusBg:'#f1f5f9', statusColor:'#64748b',
-        desc:'Rumores de gira por España. Sin fecha oficial.' },
-    ]
-
-    function renderProximamente() {
-      const grid = document.getElementById('proximamente-grid')
-      grid.innerHTML = PROXIMAMENTE.map((show, i) => `
-        <div class="prox-card fu" style="animation-delay:${i*.08}s">
-          <div class="prox-icon" style="background:${show.light}">${show.emoji}</div>
-          <div class="prox-info">
-            <div class="prox-name">${show.name}</div>
-            <span class="prox-status" style="background:${show.statusBg};color:${show.statusColor}">${show.status}</span>
-            <div class="prox-desc">${show.desc}</div>
-          </div>
-          ${show.link
-            ? `<a class="prox-notify" href="${show.link}" target="_blank" rel="noopener noreferrer">Ver entradas</a>`
-            : `<a class="prox-notify" href="#sugerencias">Avísame</a>`}
-        </div>`).join('')
-    }
-
     renderCartelera()
-    renderProximamente()
     loadNews()
     initCalendar()
 
