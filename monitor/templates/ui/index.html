@@ -1919,6 +1919,10 @@
     // ── INIT ─────────────────────────────────────────────────────────────────
     // ── PRÓXIMAMENTE ─────────────────────────────────────────────────────────
     const PROXIMAMENTE = [
+      { emoji:'🕷️', name:'La Familia Addams', color:'#1e1b4b', light:'#e0e7ff',
+        status:'Confirmado', statusBg:'#e0e7ff', statusColor:'#1e1b4b',
+        desc:'Natalia Millán como Morticia. Teatro Calderón, Madrid.',
+        link:'https://tickets.oneboxtds.com/teatro-calderon/events/53692?sessionView=LIST' },
       { emoji:'🎩', name:'Houdini',  color:'#d97706', light:'#fef3c7',
         status:'Confirmado', statusBg:'#fef3c7', statusColor:'#d97706',
         desc:'Teatro y fecha por confirmar. Madrid, 2026.' },
@@ -1940,7 +1944,9 @@
             <span class="prox-status" style="background:${show.statusBg};color:${show.statusColor}">${show.status}</span>
             <div class="prox-desc">${show.desc}</div>
           </div>
-          <a class="prox-notify" href="#sugerencias">Avísame</a>
+          ${show.link
+            ? `<a class="prox-notify" href="${show.link}" target="_blank" rel="noopener noreferrer">Ver entradas</a>`
+            : `<a class="prox-notify" href="#sugerencias">Avísame</a>`}
         </div>`).join('')
     }
 
