@@ -1224,6 +1224,7 @@
       lesmis:      '/static/ui/posters/les-miserables.jpg',
       tbom:        '/static/ui/posters/book_of_mormon.jpg',
       addams:      '/static/ui/images/ADDAMS_MUPI_1080x1920.png',
+      six:         '/static/ui/images/TEATRO-MADRID-SIX-EL-MUSICAL-cartel.jpg',
       sitpwg:      'https://www.barbican.org.uk/sites/default/files/styles/hero_constrained_small/public/images/2026-01/sundayintheparkwithgeorge-web%26agentassets_2000%20x%201096_portraitTT.jpg',
       asyoulikeit: 'https://cdn2.rsc.org.uk/sitefinity/images/productions/2026-shows/as-you-like-it/10094_feb26_playhub-news-images_ek.tmb-img-820.jpg',
     }
@@ -1233,6 +1234,7 @@
       lesmis:      { name:'Los Miserables',               color:'#dc2626', light:'#fee2e2', cls:'ev-lesmis',      tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01',                                                                        teatro:'Teatro Apolo, Madrid',                           telegram:'https://t.me/losmiserableses', discord:null },
       tbom:        { name:'Book of Mormon',               color:'#0891b2', light:'#cffafe', cls:'ev-tbom',        tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01',                                                    teatro:'Teatro Rialto, Madrid',                          telegram:'https://t.me/bookofmormones',  discord:null },
       addams:      { name:'La Familia Addams',            color:'#1e1b4b', light:'#e0e7ff', cls:'ev-addams',      tickets:'https://tickets.oneboxtds.com/teatro-calderon/events/53692?sessionView=LIST',                                                                   teatro:'Teatro Calderón, Madrid',                        telegram:null, discord:null },
+      six:         { name:'Six',                          color:'#be185d', light:'#fce7f3', cls:'ev-six',         tickets:'https://sixelmusical.entradas.plus/entradas/es/entradas_SIX',                                                                             teatro:'Teatro Gran Vía, Madrid',                        telegram:null, discord:null },
       sitpwg:      { name:'Sunday in the Park w/ George', color:'#b45309', light:'#fef3c7', cls:'ev-sitpwg',      tickets:'https://www.barbican.org.uk/whats-on/event/2027/sunday-in-the-park-with-george',                                                               teatro:'Barbican Centre, Londres',                       telegram:null, discord:null },
       asyoulikeit: { name:'As You Like It (RSC)',          color:'#15803d', light:'#dcfce7', cls:'ev-asyoulikeit', tickets:'https://secure.rsc.org.uk/events/as-you-like-it?startdate=2026-09-26&enddate=2026-11-07',                                                      teatro:'Royal Shakespeare Theatre, Stratford-upon-Avon', telegram:null, discord:null },
     }
@@ -1269,8 +1271,12 @@
         for (const show of activeMusicals) {
           const m = MUSICALS[show.key]
           if (!m) continue
-          if (show.endDate && new Date(year, month, d) > new Date(show.endDate)) continue
-          const showSessions = show.schedule ? (show.schedule[dow] ?? []) : sessions
+          if (show.endDate   && new Date(year, month, d) > new Date(show.endDate))   continue
+          if (show.startDate && new Date(year, month, d) < new Date(show.startDate)) continue
+          const dateKey = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`
+          if (show.skipDates?.includes(dateKey)) continue
+          const extraSessions = show.extraDates?.[dateKey] ?? []
+          const showSessions = [...(show.schedule ? (show.schedule[dow] ?? []) : sessions), ...extraSessions]
           if (!showSessions.length) continue
           for (const session of showSessions) {
             events.push({
@@ -1799,9 +1805,20 @@
       },
       { key:'addams', name:'La Familia Addams', region:'nacional', teatro:'Teatro Calderón, Madrid', precio:'Desde €35',
         tickets:'https://tickets.oneboxtds.com/teatro-calderon/events/53692?sessionView=LIST', soon:false,
+        startDate:'2026-09-18', endDate:'2026-11-29',
+        schedule:{ 0:['16:00','19:30'], 1:[], 2:[], 3:[], 4:['19:00'], 5:['17:00','21:00'], 6:['16:30','20:30'] },
+        extraDates:{ '2026-10-14':['19:00'], '2026-10-28':['19:00'], '2026-11-11':['19:00'] },
         reparto:[
           {rol:'Morticia Addams', actor:'Natalia Millán', foto:'', link:'https://www.instagram.com/nataliamillanoficial/', bio:'Actriz y presentadora española con una larga trayectoria en teatro, cine y televisión. Conocida por series como Yo soy Bea y Gran Reserva. Ahora encarna a Morticia Addams en su vuelta al teatro musical.'},
         ]
+      },
+      { key:'six', name:'Six', region:'nacional', teatro:'Teatro Gran Vía, Madrid', precio:'TBD',
+        tickets:'https://sixelmusical.entradas.plus/entradas/es/entradas_SIX', soon:false,
+        startDate:'2026-09-12', endDate:'2026-11-08',
+        schedule:{ 0:['12:30','17:00'], 1:[], 2:['20:00'], 3:['20:00'], 4:['20:00'], 5:['20:00'], 6:['17:00','20:00'] },
+        extraDates:{ '2026-10-12':['17:00'], '2026-11-02':['17:00'] },
+        skipDates:['2026-10-13'],
+        reparto:[]
       },
       { key:'sitpwg', name:'Sunday in the Park with George', region:'internacional', teatro:'Barbican Centre, Londres', precio:'TBA',
         tickets:'https://www.barbican.org.uk/whats-on/event/2027/sunday-in-the-park-with-george', soon:true,
@@ -1933,9 +1950,6 @@
       { emoji:'🕯️', name:'Rent',    color:'#dc2626', light:'#fee2e2',
         status:'Sin confirmar', statusBg:'#f1f5f9', statusColor:'#64748b',
         desc:'Rumores de gira por España. Sin fecha oficial.' },
-      { emoji:'👑', name:'Six',     color:'#7c3aed', light:'#ede9fe',
-        status:'Sin confirmar', statusBg:'#f1f5f9', statusColor:'#64748b',
-        desc:'Muy esperado por la comunidad fan. Sin anuncio oficial.' },
     ]
 
     function renderProximamente() {
