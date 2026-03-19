@@ -1444,15 +1444,29 @@
       { musical:'tbom',    title:'The Book of Mormon: entradas disponibles para mayo', body:'Se han liberado nuevas localidades para las funciones de mayo. ¡Corre que vuelan!', ts:'Hace 1 semana' },
     ]
 
+    function formatTs(ts) {
+      if (!ts) return ''
+      const d = new Date(ts)
+      if (isNaN(d)) return ts
+      const now = new Date()
+      const diff = Math.floor((now - d) / 1000)
+      if (diff < 60)  return 'Ahora mismo'
+      if (diff < 3600) return `Hace ${Math.floor(diff/60)} min`
+      if (diff < 86400) return `Hace ${Math.floor(diff/3600)} h`
+      if (diff < 172800) return 'Ayer'
+      return d.toLocaleDateString('es-ES', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+    }
+
     function renderNews(data) {
       const grid = document.getElementById('news-grid')
       document.getElementById('news-count').textContent = data.length + ' noticias'
       grid.innerHTML = data.map((n, i) => {
-        const m = MUSICALS[n.musical] || { color:'#059669', light:'#d1fae5', name: n.musical }
+        const m = MUSICALS[n.monitor_key] || MUSICALS[n.musical] || { color:'#059669', light:'#d1fae5', name: n.musical }
         const poster = n.image || POSTERS[n.monitor_key] || POSTERS[n.musical] || ''
         const imgHtml = poster
           ? `<img class="news-card-img" src="${poster}" alt="${m.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">`
           : `<div class="news-card-img" style="background:${m.light}"></div>`
+        const tsLabel = n.ts || formatTs(n.timestamp)
         return `
         <a class="news-card fu" href="${n.url || '#'}" style="animation-delay:${i*.07}s">
           <div class="news-card-stripe" style="background:${m.color}"></div>
@@ -1460,7 +1474,7 @@
           <div class="news-card-content">
             <div class="news-card-top">
               <span class="news-musical-tag" style="background:${m.light};color:${m.color}">${m.name}</span>
-              <span class="news-ts">${n.ts || ''}</span>
+              <span class="news-ts" title="${n.timestamp || ''}">${tsLabel}</span>
             </div>
             <div class="news-title">${n.title}</div>
             <div class="news-body">${n.body || n.summary || ''}</div>

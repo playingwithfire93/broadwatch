@@ -530,6 +530,11 @@ def save_event(monitor_key, url, summary, changes):  # noqa: ARG001
 
 
 def notify_change(url, old_text, new_text):
+    # Ignorar si el contenido anterior era un error de red (falsa alarma)
+    if old_text.startswith('Error:') or not old_text.strip():
+        log.info(f"Ignorando cambio en {url}: contenido anterior era error de red o vacío")
+        return
+
     changes = find_differences(old_text, new_text)
 
     # 1. Pedir resumen legible a Claude
