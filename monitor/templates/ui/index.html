@@ -1223,16 +1223,18 @@
       wicked:      '/static/ui/posters/wicked.jpg',
       lesmis:      '/static/ui/posters/les-miserables.jpg',
       tbom:        '/static/ui/posters/book_of_mormon.jpg',
+      addams:      '/static/ui/images/ADDAMS_MUPI_1080x1920.png',
       sitpwg:      'https://www.barbican.org.uk/sites/default/files/styles/hero_constrained_small/public/images/2026-01/sundayintheparkwithgeorge-web%26agentassets_2000%20x%201096_portraitTT.jpg',
       asyoulikeit: 'https://cdn2.rsc.org.uk/sitefinity/images/productions/2026-shows/as-you-like-it/10094_feb26_playhub-news-images_ek.tmb-img-820.jpg',
     }
 
     const MUSICALS = {
-      wicked:  { name:'Wicked',            color:'#7c3aed', light:'#ede9fe', cls:'ev-wicked',  tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01',  teatro:'Teatro Nuevo Alcalá, Madrid',  telegram:'https://t.me/wickedespana',    discord:null },
-      lesmis:  { name:'Los Miserables',    color:'#dc2626', light:'#fee2e2', cls:'ev-lesmis',  tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01',    teatro:'Teatro Apolo, Madrid',         telegram:'https://t.me/losmiserableses', discord:null },
-      tbom:        { name:'Book of Mormon',              color:'#0891b2', light:'#cffafe', cls:'ev-tbom',        tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', teatro:'Teatro Rialto, Madrid',         telegram:'https://t.me/bookofmormones',  discord:null },
-      sitpwg:      { name:'Sunday in the Park w/ George', color:'#b45309', light:'#fef3c7', cls:'ev-sitpwg',      tickets:'https://www.barbican.org.uk/whats-on/event/2027/sunday-in-the-park-with-george',            teatro:'Barbican Centre, Londres',      telegram:null, discord:null },
-      asyoulikeit: { name:'As You Like It (RSC)',         color:'#15803d', light:'#dcfce7', cls:'ev-asyoulikeit', tickets:'https://secure.rsc.org.uk/events/as-you-like-it?startdate=2026-09-26&enddate=2026-11-07',   teatro:'Royal Shakespeare Theatre, Stratford-upon-Avon', telegram:null, discord:null },
+      wicked:      { name:'Wicked',                      color:'#7c3aed', light:'#ede9fe', cls:'ev-wicked',      tickets:'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01',                                                                      teatro:'Teatro Nuevo Alcalá, Madrid',                    telegram:'https://t.me/wickedespana',    discord:null },
+      lesmis:      { name:'Los Miserables',               color:'#dc2626', light:'#fee2e2', cls:'ev-lesmis',      tickets:'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01',                                                                        teatro:'Teatro Apolo, Madrid',                           telegram:'https://t.me/losmiserableses', discord:null },
+      tbom:        { name:'Book of Mormon',               color:'#0891b2', light:'#cffafe', cls:'ev-tbom',        tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01',                                                    teatro:'Teatro Rialto, Madrid',                          telegram:'https://t.me/bookofmormones',  discord:null },
+      addams:      { name:'La Familia Addams',            color:'#1e1b4b', light:'#e0e7ff', cls:'ev-addams',      tickets:'https://tickets.oneboxtds.com/teatro-calderon/events/53692?sessionView=LIST',                                                                   teatro:'Teatro Calderón, Madrid',                        telegram:null, discord:null },
+      sitpwg:      { name:'Sunday in the Park w/ George', color:'#b45309', light:'#fef3c7', cls:'ev-sitpwg',      tickets:'https://www.barbican.org.uk/whats-on/event/2027/sunday-in-the-park-with-george',                                                               teatro:'Barbican Centre, Londres',                       telegram:null, discord:null },
+      asyoulikeit: { name:'As You Like It (RSC)',          color:'#15803d', light:'#dcfce7', cls:'ev-asyoulikeit', tickets:'https://secure.rsc.org.uk/events/as-you-like-it?startdate=2026-09-26&enddate=2026-11-07',                                                      teatro:'Royal Shakespeare Theatre, Stratford-upon-Avon', telegram:null, discord:null },
     }
 
     // Horario estándar de musicales en Madrid:
@@ -1795,6 +1797,12 @@
           {rol:'Swing',             actor:'Óscar Bustos',       foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2023/05/oscar_bustos-1.webp',               link:'https://www.instagram.com/oscarbustos.art/',   bio:'Actor, cantante y bailarín barcelonés formado en Coco Comín. Dos años en Disneyland París. Ha actuado en Gypsy (Antonio Banderas). Parte del elenco original de The Book of Mormon en el Teatro Calderón.'},
         ]
       },
+      { key:'addams', name:'La Familia Addams', region:'nacional', teatro:'Teatro Calderón, Madrid', precio:'Desde €35',
+        tickets:'https://tickets.oneboxtds.com/teatro-calderon/events/53692?sessionView=LIST', soon:false,
+        reparto:[
+          {rol:'Morticia Addams', actor:'Natalia Millán', foto:'', link:'https://www.instagram.com/nataliamillanoficial/', bio:'Actriz y presentadora española con una larga trayectoria en teatro, cine y televisión. Conocida por series como Yo soy Bea y Gran Reserva. Ahora encarna a Morticia Addams en su vuelta al teatro musical.'},
+        ]
+      },
       { key:'sitpwg', name:'Sunday in the Park with George', region:'internacional', teatro:'Barbican Centre, Londres', precio:'TBA',
         tickets:'https://www.barbican.org.uk/whats-on/event/2027/sunday-in-the-park-with-george', soon:true,
         reparto:[
@@ -1919,10 +1927,6 @@
     // ── INIT ─────────────────────────────────────────────────────────────────
     // ── PRÓXIMAMENTE ─────────────────────────────────────────────────────────
     const PROXIMAMENTE = [
-      { emoji:'🕷️', name:'La Familia Addams', color:'#1e1b4b', light:'#e0e7ff',
-        status:'Confirmado', statusBg:'#e0e7ff', statusColor:'#1e1b4b',
-        desc:'Natalia Millán como Morticia. Teatro Calderón, Madrid.',
-        link:'https://tickets.oneboxtds.com/teatro-calderon/events/53692?sessionView=LIST' },
       { emoji:'🎩', name:'Houdini',  color:'#d97706', light:'#fef3c7',
         status:'Confirmado', statusBg:'#fef3c7', statusColor:'#d97706',
         desc:'Teatro y fecha por confirmar. Madrid, 2026.' },
