@@ -28,6 +28,12 @@ except Exception:
 from urllib3.util.retry import Retry
 from flask import Flask, request, jsonify, redirect, render_template, Response
 import os
+try:
+    import cloudscraper as _cloudscraper
+    _CS = _cloudscraper.create_scraper()
+except Exception:
+    _cloudscraper = None
+    _CS = None
 import json
 import threading
 from datetime import datetime, timezone
@@ -582,13 +588,23 @@ def notify_change(url, old_text, new_text):
     send_discord_alert(url, f"{alert_title}\n\n{alert_desc}", image_path)
 
 
+_TICKETS_DOMAINS = ('tickets.wickedelmusical.com', 'tickets.miserableselmusical.es', 'tickets.thebookofmormonelmusical.es')
+
+def _is_tickets_url(url):
+    return any(d in url for d in _TICKETS_DOMAINS)
+
+
 def get_page_content(url):
     # Si la URL está en rate-limit todavía, la saltamos sin hacer petición
     if _rate_limited_until.get(url, 0) > time.time():
         return ''
 
     try:
-        response = SESSION.get(url, timeout=10)  # 10s es suficiente; antes 20s podía bloquear el pool
+        # Webs de tickets usan Cloudflare — usar cloudscraper si está disponible
+        if _is_tickets_url(url) and _CS is not None:
+            response = _CS.get(url, timeout=20)
+        else:
+            response = SESSION.get(url, timeout=10)
 
         if response.status_code == 429:
             retry_after = int(response.headers.get('Retry-After', 60))
@@ -607,6 +623,9 @@ def get_page_content(url):
         return soup.get_text(separator=' ', strip=True)
 
     except requests.exceptions.RequestException as e:
+        log.warning(f"Error fetching {url}: {str(e)[:200]}")
+        return ''
+    except Exception as e:
         log.warning(f"Error fetching {url}: {str(e)[:200]}")
         return ''
 

@@ -2,6 +2,7 @@ flask
 waitress
 anthropic>=0.25.0
 requests
+cloudscraper
 beautifulsoup4
 plyer
 python-telegram-bot
