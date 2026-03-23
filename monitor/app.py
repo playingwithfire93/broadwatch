@@ -44,13 +44,10 @@ import importlib
 URLS = [
     'https://wickedelmusical.com/',
     'https://wickedelmusical.com/elenco',
-    'https://tickets.wickedelmusical.com/espectaculo/wicked-el-musical/W01',
     'https://miserableselmusical.es/',
     'https://miserableselmusical.es/elenco',
-    'https://tickets.miserableselmusical.es/espectaculo/los-miserables/M01',
     'https://thebookofmormonelmusical.es/',
     'https://thebookofmormonelmusical.es/elenco/',
-    'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01'
 ]
 
 
