@@ -1350,7 +1350,8 @@
       // Current month days
       for (let d = 1; d <= daysInMonth; d++) {
         const isToday = d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear()
-        const dayEvents = events.filter(e => e.date.d === d)
+        const isPast = new Date(calYear, calMonth, d) < new Date(today.getFullYear(), today.getMonth(), today.getDate())
+        const dayEvents = isPast ? [] : events.filter(e => e.date.d === d)
         const el = createDayCell(d, false, dayEvents, isToday)
         grid.appendChild(el)
       }
