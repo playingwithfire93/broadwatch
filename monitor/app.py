@@ -64,8 +64,6 @@ CHAT_ID = os.environ.get('TELEGRAM_CHAT_ID') or os.environ.get('BROADWATCH_TELEG
 DISCORD_WEBHOOK = (os.environ.get('BROADWATCH_DISCORD_WEBHOOK')
                    or os.environ.get('BROADWATCH_DISCORD_ALERT', ''))
 DISCORD_WEBHOOK_SUGGESTIONS = os.environ.get('BROADWATCH_DISCORD_SUGGESTIONS', '') or DISCORD_WEBHOOK
-DISCORD_INVITE = os.environ.get('BROADWATCH_DISCORD_INVITE', '#')
-
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '').rstrip('/')
 SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY', '')
 
@@ -1023,7 +1021,7 @@ def api_test_telegram():
 # --- Lightweight Flask UI (no Node required) ---
 @app.route('/ui')
 def ui_index():
-    return render_template('ui/index.html', discord_invite=DISCORD_INVITE)
+    return render_template('ui/index.html')
 
 
 @app.route('/ui/event/<event_id>')
