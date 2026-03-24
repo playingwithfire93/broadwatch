@@ -599,6 +599,19 @@
     .ev-tbom    { background: var(--tbom-l);   color: var(--tbom);   }
     .ev-houdini { background: var(--houdini-l);color: var(--houdini);}
     .ev-other   { background: var(--other-l);  color: var(--other);  }
+    .ev-six     { background: #fce7f3; color: #be185d; }
+    .ev-addams  { background: #e0e7ff; color: #1e1b4b; }
+    .ev-qeh     { background: #e0f2fe; color: #0369a1; }
+    .ev-sitpwg  { background: #fef3c7; color: #b45309; }
+    .ev-asyoulikeit { background: #dcfce7; color: #15803d; }
+    [data-theme="dark"] .ev-six    { background: #500724; color: #f9a8d4; }
+    [data-theme="dark"] .ev-addams { background: #1e1b4b; color: #c7d2fe; }
+    [data-theme="dark"] .ev-qeh    { background: #0c4a6e; color: #7dd3fc; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .ev-six    { background: #500724; color: #f9a8d4; }
+      :root:not([data-theme="light"]) .ev-addams { background: #1e1b4b; color: #c7d2fe; }
+      :root:not([data-theme="light"]) .ev-qeh    { background: #0c4a6e; color: #7dd3fc; }
+    }
 
     /* ── EVENT TOOLTIP / POPUP ── */
     .ev-popup {
