@@ -1437,9 +1437,7 @@
       numEl.textContent = day
       cell.appendChild(numEl)
 
-      // Show up to 3 events, then "+N más"
-      const maxShow = 3
-      events.slice(0, maxShow).forEach(ev => {
+      events.forEach(ev => {
         const a = document.createElement('a')
         a.className = `cal-event ${MUSICALS[ev.musical].cls}`
         a.textContent = `${ev.session} ${ev.title}`
@@ -1460,12 +1458,6 @@
         if (ev.tickets === '#') a.addEventListener('click', e => e.preventDefault())
         cell.appendChild(a)
       })
-      if (events.length > maxShow) {
-        const more = document.createElement('span')
-        more.style.cssText = 'font-size:.6rem;color:var(--ink3);font-weight:700;padding-left:.2rem;'
-        more.textContent = `+${events.length - maxShow} más`
-        cell.appendChild(more)
-      }
       return cell
     }
 
