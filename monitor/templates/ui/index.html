@@ -540,9 +540,25 @@
       font-size: 0.72rem; font-weight: 700; color: var(--ink2);
     }
     .leg-dot { width: 10px; height: 10px; border-radius: 3px; }
+    .cal-view-toggle {
+      display: flex; gap: 2px;
+      background: rgba(15,14,12,0.07); border-radius: 10px; padding: 3px;
+    }
+    [data-theme="dark"] .cal-view-toggle { background: rgba(245,244,240,0.08); }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .cal-view-toggle { background: rgba(245,244,240,0.08); }
+    }
+    .cal-view-btn {
+      border: none; background: none; cursor: pointer;
+      font-family: 'Syne', sans-serif; font-size: .72rem; font-weight: 700;
+      padding: .28rem .75rem; border-radius: 7px; color: var(--ink3);
+      transition: background .15s, color .15s;
+    }
+    .cal-view-btn.active { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px rgba(15,14,12,.12); }
     .cal-grid {
       display: grid; grid-template-columns: repeat(7, 1fr);
     }
+    .cal-week .cal-day { min-height: 130px; }
     .cal-dow {
       text-align: center; padding: 0.65rem 0;
       font-size: 0.7rem; font-weight: 700; letter-spacing: 0.07em;
@@ -1008,9 +1024,15 @@
     </div>
     <div class="cal-wrap fu fu2">
       <div class="cal-header">
-        <button class="cal-nav-btn" id="cal-prev" aria-label="Mes anterior">&#8592;</button>
-        <span class="cal-month" id="cal-month-label"></span>
-        <button class="cal-nav-btn" id="cal-next" aria-label="Mes siguiente">&#8594;</button>
+        <button class="cal-nav-btn" id="cal-prev" aria-label="Anterior">&#8592;</button>
+        <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;justify-content:center;">
+          <span class="cal-month" id="cal-month-label"></span>
+          <div class="cal-view-toggle">
+            <button class="cal-view-btn active" id="cal-view-week">Semana</button>
+            <button class="cal-view-btn" id="cal-view-month">Mes</button>
+          </div>
+        </div>
+        <button class="cal-nav-btn" id="cal-next" aria-label="Siguiente">&#8594;</button>
       </div>
       <div class="cal-legend">
         <div class="leg-item"><span class="leg-dot" style="background:var(--wicked)"></span>Wicked</div>
@@ -1312,21 +1334,45 @@
     const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
     const DOWS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']
 
-    let calYear, calMonth
+    let calYear, calMonth, calView = 'week', calWeekStart
     const today = new Date()
+
+    function getMonday(date) {
+      const d = new Date(date)
+      const day = d.getDay()
+      d.setDate(d.getDate() - (day === 0 ? 6 : day - 1))
+      d.setHours(0, 0, 0, 0)
+      return d
+    }
 
     function initCalendar() {
       calYear = today.getFullYear()
       calMonth = today.getMonth()
+      calWeekStart = getMonday(today)
       renderCalendar()
     }
 
     function renderCalendar() {
-      document.getElementById('cal-month-label').textContent = `${MONTHS_ES[calMonth]} ${calYear}`
+      if (calView === 'week') renderWeekView()
+      else renderMonthView()
+    }
+
+    function renderWeekView() {
+      const end = new Date(calWeekStart)
+      end.setDate(end.getDate() + 6)
+      const sD = calWeekStart.getDate(), eD = end.getDate()
+      const sM = MONTHS_ES[calWeekStart.getMonth()].substring(0, 3)
+      const eM = MONTHS_ES[end.getMonth()].substring(0, 3)
+      const yr = end.getFullYear()
+      document.getElementById('cal-month-label').textContent =
+        calWeekStart.getMonth() === end.getMonth()
+          ? `${sD}–${eD} ${sM} ${yr}`
+          : `${sD} ${sM} – ${eD} ${eM} ${yr}`
+
       const grid = document.getElementById('cal-grid')
+      grid.className = 'cal-grid cal-week'
       grid.innerHTML = ''
 
-      // Day-of-week headers (Mon first)
       DOWS.forEach(d => {
         const el = document.createElement('div')
         el.className = 'cal-dow'
@@ -1334,34 +1380,51 @@
         grid.appendChild(el)
       })
 
-      const firstDay = new Date(calYear, calMonth, 1).getDay() // 0=Sun
-      const startOffset = (firstDay === 0) ? 6 : firstDay - 1  // Mon-first offset
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(calWeekStart)
+        date.setDate(date.getDate() + i)
+        const y = date.getFullYear(), m = date.getMonth(), d = date.getDate()
+        const isToday = d === today.getDate() && m === today.getMonth() && y === today.getFullYear()
+        const isPast = date < new Date(today.getFullYear(), today.getMonth(), today.getDate())
+        const dayEvs = isPast ? [] : generateEvents(y, m).filter(e => e.date.d === d)
+        grid.appendChild(createDayCell(d, false, dayEvs, isToday))
+      }
+    }
+
+    function renderMonthView() {
+      document.getElementById('cal-month-label').textContent = `${MONTHS_ES[calMonth]} ${calYear}`
+      const grid = document.getElementById('cal-grid')
+      grid.className = 'cal-grid'
+      grid.innerHTML = ''
+
+      DOWS.forEach(d => {
+        const el = document.createElement('div')
+        el.className = 'cal-dow'
+        el.textContent = d
+        grid.appendChild(el)
+      })
+
+      const firstDay = new Date(calYear, calMonth, 1).getDay()
+      const startOffset = (firstDay === 0) ? 6 : firstDay - 1
       const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate()
       const prevMonthDays = new Date(calYear, calMonth, 0).getDate()
-
       const events = generateEvents(calYear, calMonth)
 
-      // Previous month padding
       for (let i = startOffset - 1; i >= 0; i--) {
-        const el = createDayCell(prevMonthDays - i, true, [])
-        grid.appendChild(el)
+        grid.appendChild(createDayCell(prevMonthDays - i, true, []))
       }
 
-      // Current month days
       for (let d = 1; d <= daysInMonth; d++) {
         const isToday = d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear()
         const isPast = new Date(calYear, calMonth, d) < new Date(today.getFullYear(), today.getMonth(), today.getDate())
         const dayEvents = isPast ? [] : events.filter(e => e.date.d === d)
-        const el = createDayCell(d, false, dayEvents, isToday)
-        grid.appendChild(el)
+        grid.appendChild(createDayCell(d, false, dayEvents, isToday))
       }
 
-      // Next month padding
       const totalCells = startOffset + daysInMonth
       const remainder = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7)
       for (let i = 1; i <= remainder; i++) {
-        const el = createDayCell(i, true, [])
-        grid.appendChild(el)
+        grid.appendChild(createDayCell(i, true, []))
       }
     }
 
@@ -1407,11 +1470,27 @@
     }
 
     document.getElementById('cal-prev').addEventListener('click', () => {
-      calMonth--; if (calMonth < 0) { calMonth = 11; calYear-- }
+      if (calView === 'week') { calWeekStart.setDate(calWeekStart.getDate() - 7) }
+      else { calMonth--; if (calMonth < 0) { calMonth = 11; calYear-- } }
       renderCalendar()
     })
     document.getElementById('cal-next').addEventListener('click', () => {
-      calMonth++; if (calMonth > 11) { calMonth = 0; calYear++ }
+      if (calView === 'week') { calWeekStart.setDate(calWeekStart.getDate() + 7) }
+      else { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++ } }
+      renderCalendar()
+    })
+    document.getElementById('cal-view-week').addEventListener('click', () => {
+      calView = 'week'
+      document.getElementById('cal-view-week').classList.add('active')
+      document.getElementById('cal-view-month').classList.remove('active')
+      renderCalendar()
+    })
+    document.getElementById('cal-view-month').addEventListener('click', () => {
+      calView = 'month'
+      calYear = calWeekStart.getFullYear()
+      calMonth = calWeekStart.getMonth()
+      document.getElementById('cal-view-month').classList.add('active')
+      document.getElementById('cal-view-week').classList.remove('active')
       renderCalendar()
     })
 
