@@ -1054,14 +1054,6 @@
             </div>
           </div>
           <div class="field">
-            <label>Entradas disponibles</label>
-            <select id="bp-seats">
-              <option value="1">1 entrada</option>
-              <option value="2">2 entradas</option>
-              <option value="3">3 entradas</option>
-            </select>
-          </div>
-          <div class="field">
             <label>Mensaje</label>
             <textarea id="bp-message" placeholder="Ej: Tengo una entrada para el sábado 21 y no quiero ir sola 🙈 Me acompañas?" maxlength="500"></textarea>
           </div>
@@ -1627,7 +1619,7 @@
         musical,
         date,
         time:         document.getElementById('bp-time').value,
-        seats:        parseInt(document.getElementById('bp-seats').value),
+        seats:        1,
         message,
         contact,
         contact_type: document.getElementById('bp-contact-type').value,
@@ -1651,7 +1643,7 @@
       ['bp-name','bp-date','bp-message','bp-contact'].forEach(id => document.getElementById(id).value = '')
       document.getElementById('bp-musical').value = ''
       document.getElementById('bp-time').value = '20:00'
-      document.getElementById('bp-seats').value = '1'
+
       document.getElementById('bp-contact-type').value = 'telegram'
       document.getElementById('bp-success').style.display = 'none'
       document.getElementById('bp-form').style.display = 'block'
