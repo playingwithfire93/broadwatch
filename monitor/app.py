@@ -48,6 +48,7 @@ URLS = [
     'https://miserableselmusical.es/elenco',
     'https://thebookofmormonelmusical.es/',
     'https://thebookofmormonelmusical.es/elenco/',
+    'https://thebookofmormonelmusical.es/gira/',
 ]
 
 
@@ -93,6 +94,7 @@ alerts_data = {
         'urls': [
             'https://thebookofmormonelmusical.es',
             'https://thebookofmormonelmusical.es/elenco/',
+            'https://thebookofmormonelmusical.es/gira/',
             'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01'
         ],
         'sound_path': os.environ.get('BROADWATCH_TBOM_SOUND', ''),
