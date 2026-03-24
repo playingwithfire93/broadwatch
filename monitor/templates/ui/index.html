@@ -1815,6 +1815,22 @@
       },
       { key:'tbom', name:'Book of Mormon', region:'nacional', teatro:'Teatro Rialto, Madrid', precio:'Desde €25,50',
         tickets:'https://tickets.thebookofmormonelmusical.es/espectaculo/the-book-of-mormon-el-musical/BM01', soon:false, endDate:'2026-05-31',
+        discountByDow:{ 0:20, 2:20, 3:20, 4:20, 6:20 },
+        discountOverrides:{
+          '2026-03-27':{'17:00':20,'21:00':10},
+          '2026-03-28':{'17:00':10,'21:00':10},
+          '2026-03-29':25,
+          '2026-03-31':25,
+          '2026-04-01':25,'2026-04-02':25,'2026-04-03':25,'2026-04-04':25,'2026-04-05':25,
+          '2026-04-10':{'17:00':20,'21:00':25},
+          '2026-04-17':{'17:00':20,'21:00':25},
+          '2026-04-24':{'17:00':20,'21:00':25},
+          '2026-05-01':{'17:00':20,'21:00':25},
+          '2026-05-08':{'17:00':20,'21:00':25},
+          '2026-05-15':{'17:00':20,'21:00':25},
+          '2026-05-22':{'17:00':20,'21:00':25},
+          '2026-05-29':{'17:00':20,'21:00':25},
+        },
         reparto:[
           {rol:'Elder Price',       actor:'Alexandre Ars',      foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2024/06/Alexandre.webp',                    link:'https://www.instagram.com/alexandre___ars/',   bio:'Nacido en Guissona, formado en Aules Barcelona. Ha actuado en The Producers, La Jaula de Las Locas, Fama el musical, Carrie y RENT. Cofundador de Sus4 Companyia. Conocido por Tu Cara Me Suena y Operación Triunfo 2018.'},
           {rol:'Elder Cunningham',  actor:'Alejandro Mesa',     foto:'https://thebookofmormonelmusical.es/wp-content/uploads/2023/05/alejandro-1.webp',                  link:'https://www.instagram.com/alejandrofmesa/',    bio:'Nacido en Tudela en 1999, debutó a los 12 años en Sonrisas y lágrimas. Ha actuado en La familia Addams. En TV: Estoy vivo y Cuéntame cómo pasó. En cine: Descarrilados y En los márgenes.'},
@@ -1849,6 +1865,7 @@
         startDate:'2026-09-18', endDate:'2026-11-29',
         schedule:{ 0:['16:00','19:30'], 1:[], 2:[], 3:[], 4:['19:00'], 5:['17:00','21:00'], 6:['16:30','20:30'] },
         extraDates:{ '2026-10-14':['19:00'], '2026-10-28':['19:00'], '2026-11-11':['19:00'] },
+        discountOverrides:{ '2026-09-18':25,'2026-09-19':25,'2026-09-20':25,'2026-09-24':25,'2026-09-25':25 },
         reparto:[
           {rol:'Morticia Addams', actor:'Natalia Millán', foto:'/static/53cc20a9d694d8733529c9820569f685.webp', link:'https://www.instagram.com/nataliamillanoficial/', bio:'Actriz y presentadora española con una larga trayectoria en teatro, cine y televisión. Conocida por series como Yo soy Bea y Gran Reserva. Ahora encarna a Morticia Addams en su vuelta al teatro musical.'},
         ]
@@ -1856,6 +1873,7 @@
       { key:'six', name:'Six', region:'nacional', teatro:'Teatro Gran Vía, Madrid', precio:'Desde 22,82€',
         tickets:'https://sixelmusical.entradas.plus/entradas/es/entradas_SIX', soon:false,
         startDate:'2026-09-12', endDate:'2026-11-08',
+        discountOverrides:{ '2026-09-12':15, '2026-09-13':15, '2026-09-16':15 },
         schedule:{ 0:['12:30','17:00'], 1:[], 2:['20:00'], 3:['20:00'], 4:['20:00'], 5:['20:00'], 6:['17:00','20:00'] },
         extraDates:{ '2026-10-12':['17:00'], '2026-11-02':['17:00'] },
         skipDates:['2026-10-13'],
