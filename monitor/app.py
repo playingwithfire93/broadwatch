@@ -144,33 +144,32 @@ def get_alert_assets(url):
     return '', ''
 
 
-def send_telegram_alert(url, changes, timestamp, image_path):
+def send_telegram_alert(url, title, description, image_path):
     if not TELEGRAM_TOKEN or not CHAT_ID:
         log.warning("Telegram credentials not configured; skipping Telegram alert.")
         return
 
+    domain = url.split('//')[-1].rstrip('/')
+    msg = f"🎭 *{title}*\n\n{description}\n\n🔗 {domain}"
+    caption = msg[:1024]  # Telegram caption limit
+
     try:
-        # Try to send photo (preferred) via sendPhoto
         if image_path and os.path.exists(image_path):
             try:
                 with open(image_path, 'rb') as photo:
-                    files = {'photo': photo}
-                    data = {
-                        'chat_id': CHAT_ID,
-                        'caption': f"🎭 Ticket Update Detected:\n{url}\n{timestamp}"
-                    }
-                    resp = requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto", data=data, files=files, timeout=10)
+                    resp = requests.post(
+                        f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto",
+                        data={'chat_id': CHAT_ID, 'caption': caption, 'parse_mode': 'Markdown'},
+                        files={'photo': photo}, timeout=10
+                    )
                     if resp.ok:
                         log.info(f"Telegram photo alert sent for {url}")
                         return
-                    else:
-                        log.warning(f"Telegram sendPhoto returned {resp.status_code}: {resp.text}")
+                    log.warning(f"Telegram sendPhoto returned {resp.status_code}: {resp.text}")
             except Exception as e:
                 log.warning(f"Telegram photo send failed: {e}")
 
-        # Fallback to sendMessage with truncated changes
-        msg = f"🎭 Ticket Update Detected\n{url}\n{timestamp}\n\nChanges:\n{changes[:1900]}"
-        payload = {"chat_id": CHAT_ID, "text": msg}
+        payload = {"chat_id": CHAT_ID, "text": msg[:4096], "parse_mode": "Markdown"}
         r = requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage", json=payload, timeout=10)
         if r.ok:
             log.info(f"Telegram message sent for {url}")
@@ -210,14 +209,14 @@ def send_whatsapp_alert(phone_number, url, changes):
         log.error(f"Error sending WhatsApp alert: {e}")
 
 
-def send_discord_alert(url, changes, image_path=None):
+def send_discord_alert(url, title, description):
     if not DISCORD_WEBHOOK:
         log.warning("Discord webhook not configured; skipping Discord alert.")
         return
     try:
-        content = f"🎭 **Ticket Update Detected**\n{url}\n\nChanges:\n{changes[:1900]}"
-        payload = {"content": content}
-        # Post to Discord webhook
+        domain = url.split('//')[-1].rstrip('/')
+        content = f"🎭 **{title}**\n\n{description}\n\n🔗 {domain}"
+        payload = {"content": content[:2000]}
         resp = requests.post(DISCORD_WEBHOOK, json=payload, timeout=10)
         if resp.status_code in (200, 204):
             log.info("Discord alert sent")
@@ -280,11 +279,13 @@ def summarize_diff(url, diff_text):
 
     truncated = diff_text[:3000] if len(diff_text) > 3000 else diff_text
     prompt = (
-        "Eres el asistente de una web de seguimiento de musicales en España.\n"
+        "Eres el asistente de BroadWatch, una web de seguimiento de musicales en España.\n"
         f"Se ha detectado un cambio en: {url}\n\n"
-        f"Diff detectado:\n{truncated}\n\n"
-        "Genera un título corto (máx 8 palabras) y una descripción más detallada (2-3 frases) "
-        "en español, claros y para fans de musicales, explicando qué ha cambiado.\n"
+        f"Diff (las líneas con '-' son lo que había antes, las '+' lo que hay ahora):\n{truncated}\n\n"
+        "Tu tarea: explicar el cambio de forma clara y amigable para fans de musicales, en español.\n"
+        "- Título: máximo 8 palabras, directo al grano (ej: 'Nuevo actor en el elenco de BOM').\n"
+        "- Descripción: 1-2 frases explicando exactamente qué ha cambiado y qué significa para los fans.\n"
+        "- NO menciones el diff, los guiones ni la URL. Habla como si se lo contaras a un amigo.\n"
         "Responde ÚNICAMENTE con JSON válido, sin markdown, con este formato exacto:\n"
         "{\"title\": \"...\", \"description\": \"...\"}"
     )
@@ -545,8 +546,8 @@ def notify_change(url, old_text, new_text):
     summary = summarize_diff(url, changes)
 
     # 2. Notificacion de escritorio (solo en local con plyer disponible)
-    alert_title = (summary.get('title') if isinstance(summary, dict) else summary) or f"Cambio en {url}"
-    alert_desc  = (summary.get('description') if isinstance(summary, dict) else summary) or changes
+    alert_title = (summary.get('title') if isinstance(summary, dict) else summary) or f"Novedad detectada"
+    alert_desc  = (summary.get('description') if isinstance(summary, dict) else summary) or "Se ha detectado un cambio en la web. Consulta el enlace para más detalles."
     short_msg = alert_title[:250]
     if notification:
         try:
@@ -580,10 +581,10 @@ def notify_change(url, old_text, new_text):
     except Exception:
         pass
 
-    send_telegram_alert(url, f"{alert_title}\n\n{alert_desc}", time.strftime("%Y-%m-%d %H:%M:%S"), image_path)
+    send_telegram_alert(url, alert_title, alert_desc, image_path)
     for number in whatsapp_numbers:
         send_whatsapp_alert(number, url, alert_title)
-    send_discord_alert(url, f"{alert_title}\n\n{alert_desc}", image_path)
+    send_discord_alert(url, alert_title, alert_desc)
 
 
 _TICKETS_DOMAINS = ('tickets.wickedelmusical.com', 'tickets.miserableselmusical.es', 'tickets.thebookofmormonelmusical.es')
