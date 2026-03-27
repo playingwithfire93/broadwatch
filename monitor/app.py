@@ -451,7 +451,7 @@ def _supabase_insert_event(event):
             json=event,
             timeout=5,
         )
-        if r.status_code in (200, 201):
+        if r.status_code in (200, 201, 204):
             log.info(f"Evento guardado en Supabase: {event.get('title')}")
             return True
         log.error(f"Supabase insert failed: {r.status_code} {r.text[:200]}")
@@ -1180,7 +1180,7 @@ def _supabase_insert_companion(entry):
             json=entry,
             timeout=5,
         )
-        if r.status_code in (200, 201):
+        if r.status_code in (200, 201, 204):
             log.info(f"Companion guardado en Supabase: {entry.get('id')}")
             return True
         log.error(f"Supabase companion insert failed: {r.status_code} {r.text[:200]}")
