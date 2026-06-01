@@ -358,7 +358,8 @@ def _basic_summary_from_diff(diff_text, show_name, struct_diff='', is_structural
         title = f"Actualización en la web de {show_name}"
         description = f"Se ha detectado un cambio en la web de {show_name}: «{sample}»."
     else:
-        return None
+        title = f"Cambio en la web de {show_name}"
+        description = f"Se ha modificado algo en la web de {show_name}. Echa un ojo por si hay novedades."
     return {'title': title[:120], 'description': description[:300]}
 
 
@@ -432,13 +433,13 @@ def summarize_diff(url, diff_text, show_name='este musical', struct_diff='', is_
         description = result.get('description', '').strip().strip('"')
         if not title or not description:
             log.warning("Claude devolvió título/descripción vacíos — usando resumen básico")
-            return _basic_summary_from_diff(diff_text, show_name) or {'title': title, 'description': description}
+            return _basic_summary_from_diff(diff_text, show_name, struct_diff, is_structural)
         log.info(f"Título generado: {title}")
         log.info(f"Descripción generada: {description}")
         return {'title': title, 'description': description}
     except Exception as e:
         log.warning(f"Error llamando a Claude: {e} — usando resumen básico del diff")
-        return _basic_summary_from_diff(diff_text, show_name)
+        return _basic_summary_from_diff(diff_text, show_name, struct_diff, is_structural)
 
 # Logs directory and manager
 BASE_DIR = os.path.dirname(__file__)
@@ -719,8 +720,8 @@ def notify_change(url, old_text, new_text, old_struct='', new_struct='', is_stru
                              struct_diff=struct_changes, is_structural=is_structural)
 
     # 2. Notificacion de escritorio (solo en local con plyer disponible)
-    alert_title = (summary.get('title') if isinstance(summary, dict) else summary) or f"Novedad detectada"
-    alert_desc  = (summary.get('description') if isinstance(summary, dict) else summary) or "Se ha detectado un cambio en la web. Consulta el enlace para más detalles."
+    alert_title = (summary.get('title') if isinstance(summary, dict) else summary) or f"Novedad en {show_name_for_summary}"
+    alert_desc  = (summary.get('description') if isinstance(summary, dict) else summary) or f"Se ha detectado un cambio en la web de {show_name_for_summary}. Echa un ojo por si hay novedades."
     short_msg = alert_title[:250]
     if notification:
         try:
