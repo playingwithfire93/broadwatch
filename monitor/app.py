@@ -515,6 +515,37 @@ def get_monitor_key_for_url(url: str):
             return key
     return None
 
+# Patrones de contenido dinámico que cambian en cada petición sin ser informativos
+_NOISE_RE = re.compile(
+    r'(\b[a-f0-9]{32,64}\b'                                          # MD5/SHA hashes, tokens
+    r'|\b\d{10,13}\b'                                                  # Unix timestamps
+    r'|hace \d+ (segundo|minuto|hora|d[ií]a|semana)s?'               # tiempos relativos
+    r'|\d+ (persona|usuario|visitante)s? (est[aá]n?|ven|viendo)'     # contadores de visitas
+    r'|csrfmiddlewaretoken["\s=:]+[\w\-]+'                            # CSRF tokens
+    r'|_token["\s=:]+[\w\-]+'                                         # tokens genéricos
+    r'|nonce["\s=:]+[\w\-]+'                                          # nonces
+    r'|phpsessid["\s=:]+[\w\-]+'                                      # session IDs
+    r')',
+    re.IGNORECASE
+)
+
+
+def _normalize_for_hash(text):
+    """Elimina patrones volátiles antes de hashear para evitar falsas alarmas."""
+    return _NOISE_RE.sub('', text)
+
+
+def _has_meaningful_changes(diff_text):
+    """Devuelve True solo si el diff tiene al menos una línea con cambio real (no ruido)."""
+    for line in diff_text.splitlines():
+        if (line.startswith('+') and not line.startswith('+++')) or \
+           (line.startswith('-') and not line.startswith('---')):
+            cleaned = _NOISE_RE.sub('', line[1:]).strip()
+            if len(cleaned) >= 5:
+                return True
+    return False
+
+
 def find_differences(old_text, new_text):
     diff = difflib.unified_diff(old_text.splitlines(), new_text.splitlines(), lineterm="")
     return "\n".join(diff)
@@ -934,15 +965,21 @@ class Monitor:
 
                     consecutive_failures[url] = 0
 
-                    new_hash = hash_content(content + '\x00' + structure)
+                    # Normalizar antes de hashear para ignorar tokens, timestamps, etc.
+                    normalized = _normalize_for_hash(content)
+                    new_hash = hash_content(normalized + '\x00' + structure)
                     if old_hashes.get(url) and new_hash == old_hashes[url]:
-                        # Contenido idéntico — no hay nada que hacer
+                        # Contenido idéntico tras normalización — no hay nada que hacer
                         continue
 
                     if old_hashes.get(url):
-                        # Hash distinto = cambio real — encolamos para no bloquear el loop
-                        _notif_queue.put((url, old_contents.get(url, ''), content,
-                                          old_structures.get(url, ''), structure))
+                        diff = find_differences(old_contents.get(url, ''), content)
+                        if _has_meaningful_changes(diff):
+                            # Cambio real — encolamos para no bloquear el loop
+                            _notif_queue.put((url, old_contents.get(url, ''), content,
+                                              old_structures.get(url, ''), structure))
+                        else:
+                            log.info(f"Cambio menor ignorado en {url} (contenido dinámico sin significado)")
 
                     old_hashes[url] = new_hash
                     old_contents[url] = content
