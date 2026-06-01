@@ -249,7 +249,8 @@ def _notification_worker():
                 url, old_text, new_text = item[0], item[1], item[2]
                 old_struct = item[3] if len(item) > 3 else ''
                 new_struct = item[4] if len(item) > 4 else ''
-                notify_change(url, old_text, new_text, old_struct, new_struct)
+                is_structural = item[5] if len(item) > 5 else False
+                notify_change(url, old_text, new_text, old_struct, new_struct, is_structural)
             except Exception as e:
                 log.error(f"Error en worker de notificaciones: {e}")
             finally:
@@ -298,8 +299,17 @@ def _pick_meaningful_lines(lines, max_items=3):
     return [t for _, t in scored[:max_items]]
 
 
-def _basic_summary_from_diff(diff_text, show_name, struct_diff=''):
+def _basic_summary_from_diff(diff_text, show_name, struct_diff='', is_structural=False):
     """Genera un resumen básico legible a partir del diff cuando Claude no está disponible."""
+    if is_structural:
+        struct_added = [l[1:].strip() for l in struct_diff.splitlines() if l.startswith('+') and not l.startswith('+++') and l[1:].strip()]
+        struct_removed = [l[1:].strip() for l in struct_diff.splitlines() if l.startswith('-') and not l.startswith('---') and l[1:].strip()]
+        sample = (struct_added or struct_removed or ['elemento desconocido'])[0][:80]
+        return {
+            'title': f"Cambio visual en la web de {show_name}",
+            'description': f"Se ha modificado la estructura o el diseño de la web de {show_name}: {sample}",
+        }
+
     added = [l[1:].strip() for l in diff_text.splitlines() if l.startswith('+') and not l.startswith('+++') and l[1:].strip()]
     removed = [l[1:].strip() for l in diff_text.splitlines() if l.startswith('-') and not l.startswith('---') and l[1:].strip()]
 
@@ -352,43 +362,59 @@ def _basic_summary_from_diff(diff_text, show_name, struct_diff=''):
     return {'title': title[:120], 'description': description[:300]}
 
 
-def summarize_diff(url, diff_text, show_name='este musical', struct_diff=''):
+def summarize_diff(url, diff_text, show_name='este musical', struct_diff='', is_structural=False):
     """Llama a Claude para generar título y descripción del cambio en español.
     Devuelve {'title': str, 'description': str} o un resumen básico si falla."""
     client = _get_anthropic_client()
     if not client:
         log.warning("ANTHROPIC_API_KEY no configurada — usando resumen básico del diff")
-        return _basic_summary_from_diff(diff_text, show_name, struct_diff)
+        return _basic_summary_from_diff(diff_text, show_name, struct_diff, is_structural)
 
-    truncated = diff_text[:2000] if len(diff_text) > 2000 else diff_text
-
-    struct_section = ''
-    if struct_diff and struct_diff.strip():
-        struct_truncated = struct_diff[:1000]
-        struct_section = (
-            f"\n\nCambios estructurales/visuales (etiquetas HTML, clases CSS, imágenes):\n"
-            f"{struct_truncated}"
+    if is_structural:
+        struct_truncated = struct_diff[:2000] if struct_diff else diff_text[:2000]
+        prompt = (
+            "Eres el asistente de BroadWatch, una web de seguimiento de musicales en España.\n"
+            f"Se ha detectado un cambio VISUAL O ESTRUCTURAL (no de contenido) en: {url}\n\n"
+            f"Cambios en la estructura HTML (etiquetas, clases CSS, posición de elementos, imágenes):\n{struct_truncated}\n\n"
+            "Tu tarea: describir qué ha cambiado visualmente o estructuralmente en la web, en español.\n"
+            "Ejemplos de buenos títulos: 'Han movido el banner de Wicked arriba', "
+            "'Nueva imagen en la portada de BOM', 'La sección de elenco cambió de posición'\n"
+            "Reglas:\n"
+            "- Título: máximo 8 palabras, describe QUÉ elemento cambió y CÓMO\n"
+            "- Descripción: 1-2 frases concretas sobre el cambio visual/estructural\n"
+            "- Si no puedes determinar qué cambió exactamente, di 'Cambio visual en la web de "
+            f"{show_name}' y describe lo que ves en el diff\n"
+            "- Habla en tuteo, tono fan, sin mencionar el diff ni la URL\n"
+            "Responde ÚNICAMENTE con JSON válido, sin markdown:\n"
+            "{\"title\": \"...\", \"description\": \"...\"}"
         )
-
-    prompt = (
-        "Eres el asistente de BroadWatch, una web de seguimiento de musicales en España.\n"
-        f"Se ha detectado un cambio en: {url}\n\n"
-        f"Diff de texto (- = antes, + = ahora):\n{truncated}"
-        f"{struct_section}\n\n"
-        "Tu tarea: describir de forma MUY ESPECÍFICA qué ha cambiado, en español.\n"
-        "Reglas ESTRICTAS:\n"
-        "- Si hay nombres de actores o actrices, menciona el nombre exacto\n"
-        "- Si hay precios, menciona los valores concretos (ej: '45€ → 55€')\n"
-        "- Si hay fechas o temporadas, menciónalas\n"
-        "- Si cambia una clase CSS o estilo inline, describe el elemento afectado (ej: 'el banner cambió de tamaño', 'la sección de elenco se movió arriba')\n"
-        "- Si se añade o elimina una sección o imagen, di cuál\n"
-        "- Si un enlace cambia, di adónde apuntaba y adónde apunta ahora\n"
-        "- Título: máximo 8 palabras, MUY concreto. PROHIBIDO usar 'cambio detectado' o 'actualización'\n"
-        "- Descripción: 1-2 frases CONCRETAS. PROHIBIDO usar frases genéricas.\n"
-        "- Habla en tuteo, tono fan, sin mencionar el diff ni la URL\n"
-        "Responde ÚNICAMENTE con JSON válido, sin markdown:\n"
-        "{\"title\": \"...\", \"description\": \"...\"}"
-    )
+    else:
+        truncated = diff_text[:2000] if len(diff_text) > 2000 else diff_text
+        struct_section = ''
+        if struct_diff and struct_diff.strip():
+            struct_section = (
+                f"\n\nCambios estructurales/visuales (etiquetas HTML, clases CSS, imágenes):\n"
+                f"{struct_diff[:1000]}"
+            )
+        prompt = (
+            "Eres el asistente de BroadWatch, una web de seguimiento de musicales en España.\n"
+            f"Se ha detectado un cambio en: {url}\n\n"
+            f"Diff de texto (- = antes, + = ahora):\n{truncated}"
+            f"{struct_section}\n\n"
+            "Tu tarea: describir de forma MUY ESPECÍFICA qué ha cambiado, en español.\n"
+            "Reglas ESTRICTAS:\n"
+            "- Si hay nombres de actores o actrices, menciona el nombre exacto\n"
+            "- Si hay precios, menciona los valores concretos (ej: '45€ → 55€')\n"
+            "- Si hay fechas o temporadas, menciónalas\n"
+            "- Si cambia una clase CSS o estilo inline, describe el elemento afectado\n"
+            "- Si se añade o elimina una sección o imagen, di cuál\n"
+            "- Si un enlace cambia, di adónde apuntaba y adónde apunta ahora\n"
+            "- Título: máximo 8 palabras, MUY concreto. PROHIBIDO usar 'cambio detectado' o 'actualización'\n"
+            "- Descripción: 1-2 frases CONCRETAS. PROHIBIDO usar frases genéricas.\n"
+            "- Habla en tuteo, tono fan, sin mencionar el diff ni la URL\n"
+            "Responde ÚNICAMENTE con JSON válido, sin markdown:\n"
+            "{\"title\": \"...\", \"description\": \"...\"}"
+        )
     try:
         message = client.messages.create(
             model="claude-haiku-4-5-20251001",
@@ -673,7 +699,7 @@ def save_event(monitor_key, url, summary, changes):  # noqa: ARG001
     return event
 
 
-def notify_change(url, old_text, new_text, old_struct='', new_struct=''):
+def notify_change(url, old_text, new_text, old_struct='', new_struct='', is_structural=False):
     # Ignorar si el contenido anterior era un error de red (falsa alarma)
     if old_text.startswith('Error:') or not old_text.strip():
         log.info(f"Ignorando cambio en {url}: contenido anterior era error de red o vacío")
@@ -689,7 +715,8 @@ def notify_change(url, old_text, new_text, old_struct='', new_struct=''):
         'tbom': 'The Book of Mormon', 'houdini': 'Houdini',
     }
     show_name_for_summary = musical_names.get(monitor_key_for_summary, monitor_key_for_summary.title())
-    summary = summarize_diff(url, changes, show_name=show_name_for_summary, struct_diff=struct_changes)
+    summary = summarize_diff(url, changes, show_name=show_name_for_summary,
+                             struct_diff=struct_changes, is_structural=is_structural)
 
     # 2. Notificacion de escritorio (solo en local con plyer disponible)
     alert_title = (summary.get('title') if isinstance(summary, dict) else summary) or f"Novedad detectada"
@@ -974,12 +1001,12 @@ class Monitor:
 
                     if old_hashes.get(url):
                         diff = find_differences(old_contents.get(url, ''), content)
-                        if _has_meaningful_changes(diff):
-                            # Cambio real — encolamos para no bloquear el loop
-                            _notif_queue.put((url, old_contents.get(url, ''), content,
-                                              old_structures.get(url, ''), structure))
-                        else:
-                            log.info(f"Cambio menor ignorado en {url} (contenido dinámico sin significado)")
+                        is_structural = not _has_meaningful_changes(diff)
+                        if is_structural:
+                            log.info(f"Cambio estructural/visual detectado en {url}")
+                        _notif_queue.put((url, old_contents.get(url, ''), content,
+                                          old_structures.get(url, ''), structure,
+                                          is_structural))
 
                     old_hashes[url] = new_hash
                     old_contents[url] = content
