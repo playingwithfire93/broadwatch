@@ -1,4 +1,5 @@
 import logging
+import re
 import time
 
 logging.basicConfig(
@@ -233,6 +234,7 @@ except Exception:
     anthropic = None
 
 old_contents = {url: "" for url in URLS}
+old_structures = {url: "" for url in URLS}
 
 # ── Cola de notificaciones ────────────────────────────────────────────────────
 # El monitor encola (url, old, new); un worker dedicado las envía en orden.
@@ -242,9 +244,12 @@ _notif_queue: _queue.Queue = _queue.Queue()
 def _notification_worker():
     while True:
         try:
-            url, old_text, new_text = _notif_queue.get(timeout=1)
+            item = _notif_queue.get(timeout=1)
             try:
-                notify_change(url, old_text, new_text)
+                url, old_text, new_text = item[0], item[1], item[2]
+                old_struct = item[3] if len(item) > 3 else ''
+                new_struct = item[4] if len(item) > 4 else ''
+                notify_change(url, old_text, new_text, old_struct, new_struct)
             except Exception as e:
                 log.error(f"Error en worker de notificaciones: {e}")
             finally:
@@ -269,24 +274,119 @@ def _get_anthropic_client():
     return _anthropic_client
 
 
-def summarize_diff(url, diff_text):
+def _pick_meaningful_lines(lines, max_items=3):
+    """De una lista de líneas de texto plano, devuelve las más informativas.
+    Prioriza líneas cortas que parezcan títulos, precios, fechas o nombres."""
+    def score(text):
+        # Penalizar líneas muy largas (párrafos de cuerpo) o muy cortas (ruido)
+        if len(text) < 3 or len(text) > 150:
+            return 0
+        s = 1
+        # Premiar si contiene precio, fecha o palabras clave de musicales
+        if re.search(r'€|\beur\b|\d+[.,]\d{2}', text, re.I):
+            s += 3  # precio
+        if re.search(r'\b(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre|\d{1,2}[/\-]\d{1,2}[/\-]\d{2,4})\b', text, re.I):
+            s += 3  # fecha
+        if re.search(r'\b(actor|actriz|elenco|reparto|cast|protagonista|director|función|funciones|estreno|temporada|entradas|tickets|venta|disponible|agotado|sold out)\b', text, re.I):
+            s += 2  # vocabulario relevante de musicales
+        # Premiar líneas cortas que probablemente son títulos/encabezados
+        if len(text) <= 60:
+            s += 2
+        return s
+
+    scored = sorted(((score(t), t) for t in lines if score(t) > 0), reverse=True)
+    return [t for _, t in scored[:max_items]]
+
+
+def _basic_summary_from_diff(diff_text, show_name, struct_diff=''):
+    """Genera un resumen básico legible a partir del diff cuando Claude no está disponible."""
+    added = [l[1:].strip() for l in diff_text.splitlines() if l.startswith('+') and not l.startswith('+++') and l[1:].strip()]
+    removed = [l[1:].strip() for l in diff_text.splitlines() if l.startswith('-') and not l.startswith('---') and l[1:].strip()]
+
+    best_added = _pick_meaningful_lines(added)
+    best_removed = _pick_meaningful_lines(removed)
+
+    # Si el diff de texto no es informativo, intentar extraer algo del diff estructural
+    if not best_added and not best_removed and struct_diff:
+        struct_added = [l[1:].strip() for l in struct_diff.splitlines() if l.startswith('+') and not l.startswith('+++') and l[1:].strip()]
+        struct_removed = [l[1:].strip() for l in struct_diff.splitlines() if l.startswith('-') and not l.startswith('---') and l[1:].strip()]
+        if struct_added or struct_removed:
+            sample = (struct_added or struct_removed)[0][:80]
+            return {
+                'title': f"Cambio visual en la web de {show_name}",
+                'description': f"Se ha modificado la estructura o el diseño de la web de {show_name}: {sample}",
+            }
+
+    if best_added and best_removed:
+        old_sample = best_removed[0][:80]
+        new_sample = best_added[0][:80]
+        title = f"Cambio en {show_name}: «{old_sample}» → «{new_sample}»"
+        extras = '; '.join(best_added[1:])
+        description = (
+            f"Se ha modificado contenido en la web de {show_name}. "
+            f"Antes: «{old_sample}». Ahora: «{new_sample}»."
+            + (f" Otros cambios: {extras}." if extras else "")
+        )
+    elif best_added:
+        sample = best_added[0][:80]
+        title = f"Nuevo en {show_name}: «{sample}»"
+        extras = '; '.join(best_added[1:])
+        description = (
+            f"Se ha añadido contenido en la web de {show_name}: «{sample}»."
+            + (f" También: {extras}." if extras else "")
+        )
+    elif best_removed:
+        sample = best_removed[0][:80]
+        title = f"Eliminado en {show_name}: «{sample}»"
+        extras = '; '.join(best_removed[1:])
+        description = (
+            f"Se ha eliminado contenido de la web de {show_name}: «{sample}»."
+            + (f" También: {extras}." if extras else "")
+        )
+    elif added or removed:
+        sample = (added or removed)[0][:80]
+        title = f"Actualización en la web de {show_name}"
+        description = f"Se ha detectado un cambio en la web de {show_name}: «{sample}»."
+    else:
+        return None
+    return {'title': title[:120], 'description': description[:300]}
+
+
+def summarize_diff(url, diff_text, show_name='este musical', struct_diff=''):
     """Llama a Claude para generar título y descripción del cambio en español.
-    Devuelve {'title': str, 'description': str} o None si falla."""
+    Devuelve {'title': str, 'description': str} o un resumen básico si falla."""
     client = _get_anthropic_client()
     if not client:
-        log.warning("ANTHROPIC_API_KEY no configurada — usando resumen genérico")
-        return None
+        log.warning("ANTHROPIC_API_KEY no configurada — usando resumen básico del diff")
+        return _basic_summary_from_diff(diff_text, show_name, struct_diff)
 
-    truncated = diff_text[:3000] if len(diff_text) > 3000 else diff_text
+    truncated = diff_text[:2000] if len(diff_text) > 2000 else diff_text
+
+    struct_section = ''
+    if struct_diff and struct_diff.strip():
+        struct_truncated = struct_diff[:1000]
+        struct_section = (
+            f"\n\nCambios estructurales/visuales (etiquetas HTML, clases CSS, imágenes):\n"
+            f"{struct_truncated}"
+        )
+
     prompt = (
         "Eres el asistente de BroadWatch, una web de seguimiento de musicales en España.\n"
         f"Se ha detectado un cambio en: {url}\n\n"
-        f"Diff (las líneas con '-' son lo que había antes, las '+' lo que hay ahora):\n{truncated}\n\n"
-        "Tu tarea: explicar el cambio de forma clara y amigable para fans de musicales, en español.\n"
-        "- Título: máximo 8 palabras, directo al grano (ej: 'Nuevo actor en el elenco de BOM').\n"
-        "- Descripción: 1-2 frases explicando exactamente qué ha cambiado y qué significa para los fans.\n"
-        "- NO menciones el diff, los guiones ni la URL. Habla como si se lo contaras a un amigo.\n"
-        "Responde ÚNICAMENTE con JSON válido, sin markdown, con este formato exacto:\n"
+        f"Diff de texto (- = antes, + = ahora):\n{truncated}"
+        f"{struct_section}\n\n"
+        "Tu tarea: describir de forma MUY ESPECÍFICA qué ha cambiado, en español.\n"
+        "Reglas ESTRICTAS:\n"
+        "- Si hay nombres de actores o actrices, menciona el nombre exacto\n"
+        "- Si hay precios, menciona los valores concretos (ej: '45€ → 55€')\n"
+        "- Si hay fechas o temporadas, menciónalas\n"
+        "- Si cambia una clase CSS o estilo inline, describe el elemento afectado (ej: 'el banner cambió de tamaño', 'la sección de elenco se movió arriba')\n"
+        "- Si se añade o elimina una sección o imagen, di cuál\n"
+        "- Si un enlace cambia, di adónde apuntaba y adónde apunta ahora\n"
+        "- Título: máximo 8 palabras, MUY concreto. PROHIBIDO usar 'cambio detectado' o 'actualización'\n"
+        "- Descripción: 1-2 frases CONCRETAS. PROHIBIDO usar frases genéricas.\n"
+        "- Habla en tuteo, tono fan, sin mencionar el diff ni la URL\n"
+        "Responde ÚNICAMENTE con JSON válido, sin markdown:\n"
         "{\"title\": \"...\", \"description\": \"...\"}"
     )
     try:
@@ -296,15 +396,23 @@ def summarize_diff(url, diff_text):
             messages=[{"role": "user", "content": prompt}]
         )
         raw = message.content[0].text.strip()
+        # Eliminar posibles bloques de markdown que Claude añada a veces
+        if raw.startswith('```'):
+            raw = re.sub(r'^```[a-z]*\n?', '', raw)
+            raw = re.sub(r'\n?```$', '', raw)
+            raw = raw.strip()
         result = json.loads(raw)
         title = result.get('title', '').strip().strip('"')
         description = result.get('description', '').strip().strip('"')
+        if not title or not description:
+            log.warning("Claude devolvió título/descripción vacíos — usando resumen básico")
+            return _basic_summary_from_diff(diff_text, show_name) or {'title': title, 'description': description}
         log.info(f"Título generado: {title}")
         log.info(f"Descripción generada: {description}")
         return {'title': title, 'description': description}
     except Exception as e:
-        log.warning(f"Error llamando a Claude: {e}")
-        return None
+        log.warning(f"Error llamando a Claude: {e} — usando resumen básico del diff")
+        return _basic_summary_from_diff(diff_text, show_name)
 
 # Logs directory and manager
 BASE_DIR = os.path.dirname(__file__)
@@ -534,16 +642,23 @@ def save_event(monitor_key, url, summary, changes):  # noqa: ARG001
     return event
 
 
-def notify_change(url, old_text, new_text):
+def notify_change(url, old_text, new_text, old_struct='', new_struct=''):
     # Ignorar si el contenido anterior era un error de red (falsa alarma)
     if old_text.startswith('Error:') or not old_text.strip():
         log.info(f"Ignorando cambio en {url}: contenido anterior era error de red o vacío")
         return
 
     changes = find_differences(old_text, new_text)
+    struct_changes = find_differences(old_struct, new_struct) if old_struct and new_struct else ''
 
     # 1. Pedir resumen legible a Claude
-    summary = summarize_diff(url, changes)
+    monitor_key_for_summary = get_monitor_key_for_url(url) or 'general'
+    musical_names = {
+        'wicked': 'Wicked', 'les_mis': 'Los Miserables',
+        'tbom': 'The Book of Mormon', 'houdini': 'Houdini',
+    }
+    show_name_for_summary = musical_names.get(monitor_key_for_summary, monitor_key_for_summary.title())
+    summary = summarize_diff(url, changes, show_name=show_name_for_summary, struct_diff=struct_changes)
 
     # 2. Notificacion de escritorio (solo en local con plyer disponible)
     alert_title = (summary.get('title') if isinstance(summary, dict) else summary) or f"Novedad detectada"
@@ -593,10 +708,46 @@ def _is_tickets_url(url):
     return any(d in url for d in _TICKETS_DOMAINS)
 
 
+def _extract_page_structure(soup):
+    """Compact structural representation to detect visual/layout changes."""
+    SEMANTIC_TAGS = {'header', 'footer', 'nav', 'main', 'section', 'article',
+                     'h1', 'h2', 'h3', 'h4', 'img', 'a', 'button'}
+    lines = []
+    seen = set()
+    for tag in soup.find_all(SEMANTIC_TAGS):
+        name = tag.name
+        if name == 'img':
+            src = (tag.get('src') or tag.get('data-src', ''))[:120]
+            alt = tag.get('alt', '')[:50]
+            line = f'<img src="{src}" alt="{alt}">'
+        elif name == 'a':
+            href = tag.get('href', '')[:80]
+            text = tag.get_text(strip=True)[:60]
+            line = f'<a href="{href}">{text}</a>'
+        else:
+            classes = ' '.join(tag.get('class', []))[:100]
+            style = tag.get('style', '')[:80]
+            text_preview = tag.get_text(strip=True)[:60]
+            attrs = []
+            if classes:
+                attrs.append(f'class="{classes}"')
+            if style:
+                attrs.append(f'style="{style}"')
+            attr_str = (' ' + ' '.join(attrs)) if attrs else ''
+            line = f'<{name}{attr_str}>{text_preview}'
+        if line not in seen:
+            seen.add(line)
+            lines.append(line)
+        if len(lines) >= 200:
+            break
+    return '\n'.join(lines)
+
+
 def get_page_content(url):
+    """Returns (text, structure) tuple. Both empty strings on failure."""
     # Si la URL está en rate-limit todavía, la saltamos sin hacer petición
     if _rate_limited_until.get(url, 0) > time.time():
-        return ''
+        return '', ''
 
     try:
         # Webs de tickets usan Cloudflare — usar cloudscraper si está disponible
@@ -609,7 +760,7 @@ def get_page_content(url):
             retry_after = int(response.headers.get('Retry-After', 60))
             _rate_limited_until[url] = time.time() + retry_after  # marca para reintento futuro
             log.info(f"Rate limited por {url} — reintento en {retry_after}s")
-            return ''
+            return '', ''
 
         response.raise_for_status()
 
@@ -619,14 +770,16 @@ def get_page_content(url):
         soup = BeautifulSoup(response.text, 'html.parser')
         for tag in soup(['script', 'style', 'noscript']):
             tag.decompose()
-        return soup.get_text(separator=' ', strip=True)
+        text = soup.get_text(separator=' ', strip=True)
+        structure = _extract_page_structure(soup)
+        return text, structure
 
     except requests.exceptions.RequestException as e:
         log.warning(f"Error fetching {url}: {str(e)[:200]}")
-        return ''
+        return '', ''
     except Exception as e:
         log.warning(f"Error fetching {url}: {str(e)[:200]}")
-        return ''
+        return '', ''
 
 
 def hash_content(content):
@@ -681,7 +834,7 @@ def reenable_disabled_urls():
     global disabled_urls
     for url in list(disabled_urls):
         log.info(f"Reintentando conexión con {url}...")
-        content = get_page_content(url)
+        content, _ = get_page_content(url)
         if content:
             log.info(f"Rehabilitado {url}")
             disabled_urls.remove(url)
@@ -729,6 +882,7 @@ class Monitor:
             if url not in self.urls:
                 self.urls.append(url)
                 old_contents[url] = ''
+                old_structures[url] = ''
                 consecutive_failures[url] = 0
         return True
 
@@ -766,10 +920,11 @@ class Monitor:
                 for future in as_completed(futures):
                     url = futures[future]
                     try:
-                        content = future.result()
+                        result = future.result()
+                        content, structure = result if isinstance(result, tuple) else (result, '')
                     except Exception as e:
                         log.warning(f"Error inesperado fetching {url}: {e}")
-                        content = ''
+                        content, structure = '', ''
 
                     if not content:
                         consecutive_failures[url] = consecutive_failures.get(url, 0) + 1
@@ -779,17 +934,19 @@ class Monitor:
 
                     consecutive_failures[url] = 0
 
-                    new_hash = hash_content(content)
+                    new_hash = hash_content(content + '\x00' + structure)
                     if old_hashes.get(url) and new_hash == old_hashes[url]:
                         # Contenido idéntico — no hay nada que hacer
                         continue
 
                     if old_hashes.get(url):
                         # Hash distinto = cambio real — encolamos para no bloquear el loop
-                        _notif_queue.put((url, old_contents.get(url, ''), content))
+                        _notif_queue.put((url, old_contents.get(url, ''), content,
+                                          old_structures.get(url, ''), structure))
 
                     old_hashes[url] = new_hash
                     old_contents[url] = content
+                    old_structures[url] = structure
 
             reenable_disabled_urls()
             time.sleep(self.check_interval)
