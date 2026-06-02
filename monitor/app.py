@@ -301,6 +301,37 @@ def _pick_meaningful_lines(lines, max_items=3):
     return [t for _, t in scored[:max_items]]
 
 
+def _format_diff_extract(diff_text, struct_diff='', is_structural=False, max_lines=4):
+    """Genera un extracto visual con las líneas más relevantes del cambio."""
+    source = struct_diff if is_structural and struct_diff else diff_text
+    added = [l[1:].strip() for l in source.splitlines()
+             if l.startswith('+') and not l.startswith('+++') and l[1:].strip()]
+    removed = [l[1:].strip() for l in source.splitlines()
+               if l.startswith('-') and not l.startswith('---') and l[1:].strip()]
+
+    best_added = _pick_meaningful_lines(added, max_items=max_lines)
+    best_removed = _pick_meaningful_lines(removed, max_items=max_lines)
+
+    # Si no hay líneas con vocabulario relevante, usar las primeras disponibles
+    if not best_added and not best_removed:
+        best_added = added[:max_lines]
+        best_removed = removed[:max_lines]
+
+    lines = []
+    pairs = max(len(best_removed), len(best_added))
+    for i in range(pairs):
+        r = best_removed[i][:120] if i < len(best_removed) else None
+        a = best_added[i][:120] if i < len(best_added) else None
+        if r and a:
+            lines.append(f"❌ {r}\n✅ {a}")
+        elif r:
+            lines.append(f"❌ {r}")
+        elif a:
+            lines.append(f"✅ {a}")
+
+    return '\n'.join(lines)
+
+
 def _basic_summary_from_diff(diff_text, show_name, struct_diff='', is_structural=False):
     """Genera un resumen básico legible a partir del diff cuando Claude no está disponible."""
     if is_structural:
@@ -759,6 +790,10 @@ def notify_change(url, old_text, new_text, old_struct='', new_struct='', is_stru
     # 2. Notificacion de escritorio (solo en local con plyer disponible)
     alert_title = (summary.get('title') if isinstance(summary, dict) else summary) or f"Novedad en {show_name_for_summary}"
     alert_desc  = (summary.get('description') if isinstance(summary, dict) else summary) or f"Se ha detectado un cambio en la web de {show_name_for_summary}. Echa un ojo por si hay novedades."
+
+    extract = _format_diff_extract(changes, struct_changes, is_structural)
+    if extract:
+        alert_desc = f"{alert_desc}\n\n📋 Extracto:\n{extract}"
     short_msg = alert_title[:250]
     if notification:
         try:
