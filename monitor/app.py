@@ -67,6 +67,8 @@ DISCORD_WEBHOOK = (os.environ.get('BROADWATCH_DISCORD_WEBHOOK')
 DISCORD_WEBHOOK_SUGGESTIONS = os.environ.get('BROADWATCH_DISCORD_SUGGESTIONS', '') or DISCORD_WEBHOOK
 SUPABASE_URL = os.environ.get('SUPABASE_URL', '').rstrip('/')
 SUPABASE_ANON_KEY = os.environ.get('SUPABASE_ANON_KEY', '')
+NOTION_TOKEN = os.environ.get('BROADWATCH_NOTION_TOKEN', '')
+NOTION_DATABASE_ID = os.environ.get('BROADWATCH_NOTION_DATABASE_ID', '')
 
 # Twilio (recommended: move to env vars)
 
@@ -700,6 +702,41 @@ def save_event(monitor_key, url, summary, changes):  # noqa: ARG001
     return event
 
 
+def send_notion_log(url, title, description, show_name, is_structural):
+    """Crea una fila en la base de datos de Notion con el resumen del cambio."""
+    if not NOTION_TOKEN or not NOTION_DATABASE_ID:
+        return
+    tipo = 'Estructural / Visual' if is_structural else 'Contenido'
+    payload = {
+        'parent': {'database_id': NOTION_DATABASE_ID},
+        'properties': {
+            'Nombre': {'title': [{'text': {'content': title[:2000]}}]},
+            'Musical': {'select': {'name': show_name}},
+            'Descripción': {'rich_text': [{'text': {'content': description[:2000]}}]},
+            'URL': {'url': url},
+            'Tipo': {'select': {'name': tipo}},
+            'Fecha': {'date': {'start': datetime.now(timezone.utc).isoformat()}},
+        },
+    }
+    try:
+        resp = requests.post(
+            'https://api.notion.com/v1/pages',
+            headers={
+                'Authorization': f'Bearer {NOTION_TOKEN}',
+                'Notion-Version': '2022-06-28',
+                'Content-Type': 'application/json',
+            },
+            json=payload,
+            timeout=10,
+        )
+        if resp.ok:
+            log.info(f"Notion: fila creada — {title}")
+        else:
+            log.warning(f"Notion log falló: {resp.status_code} {resp.text[:200]}")
+    except Exception as e:
+        log.warning(f"Error enviando a Notion: {e}")
+
+
 def notify_change(url, old_text, new_text, old_struct='', new_struct='', is_structural=False):
     # Ignorar si el contenido anterior era un error de red (falsa alarma)
     if old_text.startswith('Error:') or not old_text.strip():
@@ -759,6 +796,7 @@ def notify_change(url, old_text, new_text, old_struct='', new_struct='', is_stru
     for number in whatsapp_numbers:
         send_whatsapp_alert(number, url, alert_title)
     send_discord_alert(url, alert_title, alert_desc)
+    send_notion_log(url, alert_title, alert_desc, show_name_for_summary, is_structural)
 
 
 _TICKETS_DOMAINS = ('tickets.wickedelmusical.com', 'tickets.miserableselmusical.es', 'tickets.thebookofmormonelmusical.es')
