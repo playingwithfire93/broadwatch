@@ -840,6 +840,18 @@ def _is_tickets_url(url):
     return any(d in url for d in _TICKETS_DOMAINS)
 
 
+# Patrones de líneas estructurales a ignorar al comparar (carruseles/sliders que
+# reordenan o rotan las mismas imágenes sin que sea una novedad real).
+# Añade aquí más patrones si aparece ruido similar en otras webs.
+STRUCTURE_IGNORE_PATTERNS = [
+    re.compile(r'^<img src="[^"]*thebookofmormonelmusical\.es/wp-content/uploads/\d{4}/\d{2}/mormon[^"]*"[^>]*>$', re.IGNORECASE),
+]
+
+
+def _is_ignored_structure_line(line):
+    return any(p.match(line) for p in STRUCTURE_IGNORE_PATTERNS)
+
+
 def _extract_page_structure(soup):
     """Compact structural representation to detect visual/layout changes."""
     SEMANTIC_TAGS = {'header', 'footer', 'nav', 'main', 'section', 'article',
@@ -867,6 +879,8 @@ def _extract_page_structure(soup):
                 attrs.append(f'style="{style}"')
             attr_str = (' ' + ' '.join(attrs)) if attrs else ''
             line = f'<{name}{attr_str}>{text_preview}'
+        if _is_ignored_structure_line(line):
+            continue
         if line not in seen:
             seen.add(line)
             lines.append(line)
